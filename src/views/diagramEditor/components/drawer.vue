@@ -150,10 +150,10 @@ export default {
 </script>
 <style lang="less" scoped>
 .fixed-sidebar {
-  width: 300px;
+  width: 100%;
   height: 100vh;
-  background-color: #ffffff;
-  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  border-right: 0.2px solid #ddd;
   padding: 10px;
   box-sizing: border-box;
 }

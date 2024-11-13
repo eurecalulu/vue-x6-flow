@@ -3,14 +3,14 @@
     <!-- 顶部标题栏 -->
     <el-header
       style="
-        background-color: #fdfdfd;
+        background-color: #f0f0f0;
         color: #333;
         text-align: center;
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         font-weight: bold;
         border-bottom: 1px solid #ddd;
-        height: 50px;
-        line-height: 60px;
+        height: 45px;
+        line-height: 45px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -22,8 +22,8 @@
     <el-container>
       <!-- 固定左侧组件栏 -->
       <el-aside
-        width="300px"
-        style="background-color: #ffffff; border-right: 1px solid #ddd"
+        width="280px"
+        style="background-color: #f7f7f7; border-right: 0.2px solid #ddd"
       >
         <Drawer @addNode="addNode" />
       </el-aside>
@@ -33,11 +33,13 @@
         <!-- 工具栏 -->
         <el-header
           style="
-            background-color: #fdfdfd;
+            background-color: #f7f7f7;
             display: flex;
             align-items: center;
             padding: 2px;
             border-bottom: 1px solid #ddd;
+            height: 40px; /* Reduced height */
+            line-height: 40px; /* Align items vertically */
           "
         >
           <!-- 工具按钮，调整样式和对齐 -->
@@ -94,7 +96,7 @@
                   v-if="index === 0"
                   ref="drawCot"
                   id="draw-cot"
-                  style="height: calc(100vh - 180px); background-color: #1b1b1b"
+                  class="canvas-container"
                 >
                   <!-- 画布内容在此 -->
                 </div>
@@ -219,7 +221,7 @@ export default {
         id: "node-1731268485649",
         label: "生成器",
         type: "generator",
-        fillColor: "#409EFF",
+        fillColor: "#f5f5f5",
         lineWidth: 2,
         parameterName: "额定功率",
         input: "Real P",
@@ -258,8 +260,8 @@ export default {
           height: 120,
           attrs: {
             body: {
-              stroke: "#5F95FF",
-              fill: "#EFF4FF",
+              stroke: "#f5f5f5",
+              fill: "#f5f5f5",
               rx: 6, // 圆角效果
               ry: 6,
             },
@@ -303,7 +305,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#5F95FF",
+                    stroke: "#f7f7f7",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -315,7 +317,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#5F95FF",
+                    stroke: "#f7f7f7",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -327,7 +329,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#5F95FF",
+                    stroke: "#f7f7f7",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -339,7 +341,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#5F95FF",
+                    stroke: "#f7f7f7",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -483,11 +485,11 @@ export default {
       this.graph = graph;
 
       // Add border and shadow to the canvas container
-      const drawCot = document.getElementById("draw-cot");
-      drawCot.style.border = "1px solid #ddd";
-      drawCot.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.1)";
-      drawCot.style.margin = "20px";
-      drawCot.style.backgroundColor = "#f5f5f5";
+      // const drawCot = document.getElementById("draw-cot");
+      // drawCot.style.border = "1px solid #ddd";
+      // drawCot.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.1)";
+      // drawCot.style.margin = "20px";
+      // drawCot.style.backgroundColor = "#f5f5f5";
 
       graph.on("edge:contextmenu", ({ e, x, y, edge, view }) => {
         console.log(x, y, view);
@@ -757,58 +759,46 @@ export default {
 </script>
 
 <style lang="less" scoped>
-header {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  height: 40px;
-  box-sizing: border-box;
+#draw-cot {
+  margin-left: 20px;
+  margin-right: 5px;
+  margin-top: 10px;
+  padding: 0px;
+  border: 1px solid #ddd;
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+  background-color: #f5f5f5;
+  overflow: auto;
+  width: 95%;
+  height: calc(100vh - 200px); /* 保证画布自适应高度 */
 }
 
+/* 工具栏按钮 hover 效果 */
 header i {
   margin: 8px;
-  font-size: 30px;
+  font-size: 20px;
 }
+
+/* 选中节点的样式 */
 .x6-node-selected .node {
   border-color: #1890ff;
-  border-radius: 2px;
   box-shadow: 0 0 0 4px #d4e8fe;
 }
 
 .x6-node-selected .node.success {
   border-color: #52c41a;
-  border-radius: 2px;
   box-shadow: 0 0 0 4px #ccecc0;
 }
 
 .x6-node-selected .node.failed {
   border-color: #ff4d4f;
-  border-radius: 2px;
   box-shadow: 0 0 0 4px #fedcdc;
 }
 
-.x6-edge:hover path:nth-child(2) {
-  stroke: #1890ff;
-  stroke-width: 1px;
-}
-
+/* 边 hover 和选中效果 */
+.x6-edge:hover path:nth-child(2),
 .x6-edge-selected path:nth-child(2) {
   stroke: #1890ff;
-  stroke-width: 1.5px !important;
-}
-
-.section-cot {
-  display: flex;
-}
-
-.section-cot #container {
-  position: relative;
-  flex: 1;
-}
-
-.section-cot #container #draw-cot {
-  width: 100%;
-  height: 100%;
+  stroke-width: 1.5px;
 }
 
 .custom-node {
@@ -816,9 +806,6 @@ header i {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: transparent;
-  width: 100px;
-  height: 100px;
 }
 
 .node-icon {
@@ -833,20 +820,31 @@ header i {
   font-size: 14px;
 }
 
+/* 去除滚动条 */
 ::-webkit-scrollbar {
   width: 0;
 }
 
-#draw-cot {
-  margin: 30px 30px 30px 30px;
-  // margin: 0;
-  padding: 20px;
-  border: 1px solid #ddd;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #f5f5f5;
-  overflow: hidden; /* 限制内容超出 */
-  max-width: 90%; /* 设置最大宽度 */
-  max-height: calc(100vh - 220px); /* 设置最大高度 */
-  // max-height: 100%;
+/* Scoped styles to override Element UI's default selected tab color */
+:deep(.el-tabs__item.is-active) {
+  color: #555555 !important; /* Deep gray color for text */
+  border-bottom: 2px solid #555555 !important; /* Deep gray border for the active tab */
+}
+
+:deep(.el-tabs__active-bar) {
+  background-color: #555555 !important; /* Deep gray indicator bar */
+}
+
+.el-icon-menu:hover,
+.el-icon-crop:hover,
+.el-icon-zoom-in:hover,
+.el-icon-zoom-out:hover,
+.el-icon-full-screen:hover,
+.el-icon-video-play:hover,
+.el-icon-upload:hover,
+.el-icon-link:hover,
+.el-icon-lock:hover,
+.el-icon-unlock:hover {
+  color: #333333; /* 悬停时的深灰色效果 */
 }
 </style>
