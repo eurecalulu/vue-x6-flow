@@ -4,18 +4,27 @@
     <el-header
       style="
         background-color: #fdfdfd;
-        color: black;
+        color: #333;
         text-align: center;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
+        font-weight: bold;
         border-bottom: 1px solid #ddd;
+        height: 50px;
+        line-height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       "
     >
-      TestStudio
+      三峡课题——低代码平台
     </el-header>
 
     <el-container>
-      <!-- 左侧固定组件栏 -->
-      <el-aside width="300px" style="background-color: #f0f0f0">
+      <!-- 固定左侧组件栏 -->
+      <el-aside
+        width="300px"
+        style="background-color: #ffffff; border-right: 1px solid #ddd"
+      >
         <Drawer @addNode="addNode" />
       </el-aside>
 
@@ -27,91 +36,47 @@
             background-color: #fdfdfd;
             display: flex;
             align-items: center;
-            padding: 8px;
+            padding: 2px;
             border-bottom: 1px solid #ddd;
           "
         >
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="项目"
-            placement="bottom"
-          >
-            <i class="el-icon-menu" @click="showDrawerFn()" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="长按shift多选"
-            placement="bottom"
-          >
-            <i class="el-icon-crop" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="放大"
-            placement="bottom"
-          >
-            <i class="el-icon-zoom-in" @click="zoomFn(0.2)" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="缩小"
-            placement="bottom"
-          >
-            <i class="el-icon-zoom-out" @click="zoomFn(-0.2)" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="适应屏幕"
-            placement="bottom"
-          >
-            <i class="el-icon-full-screen" @click="centerFn" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="执行"
-            placement="bottom"
-          >
-            <i class="el-icon-video-play" @click="startFn()" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="保存"
-            placement="bottom"
-          >
-            <i class="el-icon-upload" @click="saveFn()" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="加载保存页面"
-            placement="bottom"
-          >
-            <i class="el-icon-link" @click="loadFn()" />
-          </el-tooltip>
-          <el-tooltip
-            class="item"
-            effect="dark"
-            content="是否禁用"
-            placement="bottom"
-          >
-            <i
-              :class="{ 'el-icon-lock': isLock, 'el-icon-unlock': !isLock }"
-              @click="lockFn()"
-            />
-          </el-tooltip>
-          <!-- 其他工具按钮 -->
+          <!-- 工具按钮，调整样式和对齐 -->
+          <div style="display: flex; gap: 10px; align-items: center">
+            <el-tooltip content="项目" placement="bottom">
+              <i class="el-icon-menu" />
+            </el-tooltip>
+            <el-tooltip content="长按shift多选" placement="bottom">
+              <i class="el-icon-crop" />
+            </el-tooltip>
+            <el-tooltip content="放大" placement="bottom">
+              <i class="el-icon-zoom-in" @click="zoomFn(0.2)" />
+            </el-tooltip>
+            <el-tooltip content="缩小" placement="bottom">
+              <i class="el-icon-zoom-out" @click="zoomFn(-0.2)" />
+            </el-tooltip>
+            <el-tooltip content="适应屏幕" placement="bottom">
+              <i class="el-icon-full-screen" @click="centerFn" />
+            </el-tooltip>
+            <el-tooltip content="执行" placement="bottom">
+              <i class="el-icon-video-play" @click="startFn()" />
+            </el-tooltip>
+            <el-tooltip content="保存" placement="bottom">
+              <i class="el-icon-upload" @click="saveFn()" />
+            </el-tooltip>
+            <el-tooltip content="加载保存页面" placement="bottom">
+              <i class="el-icon-link" @click="loadFn()" />
+            </el-tooltip>
+            <el-tooltip content="是否禁用" placement="bottom">
+              <i
+                :class="{ 'el-icon-lock': isLock, 'el-icon-unlock': !isLock }"
+                @click="lockFn()"
+              />
+            </el-tooltip>
+          </div>
         </el-header>
 
         <!-- 标签页和画布 -->
         <el-main style="position: relative; padding: 0">
-          <!-- 标签页区域使用 el-tabs -->
           <div @click.stop="hideFn">
             <MenuBar
               v-if="showContextMenu"
@@ -125,12 +90,11 @@
                 :label="tab.name"
                 :name="String(index)"
               >
-                <!-- 每个标签页对应的内容或画布 -->
                 <div
                   v-if="index === 0"
                   ref="drawCot"
                   id="draw-cot"
-                  style="height: calc(100vh - 150px); background-color: #1b1b1b"
+                  style="height: calc(100vh - 180px); background-color: #1b1b1b"
                 >
                   <!-- 画布内容在此 -->
                 </div>
@@ -442,16 +406,16 @@ export default {
           visible: true,
           type: "dot", // 'dot' | 'fixedDot' | 'mesh'
           args: {
-            color: "#a05410", // 网格线/点颜色
+            color: "#c4bfbf", // 网格线/点颜色
             thickness: 1, // 网格线宽度/网格点大小
           },
         },
         background: {
-          color: "#fffbe6", // 设置画布背景颜色
+          color: "#ffffff", // 设置画布背景颜色
         },
         container: document.getElementById("draw-cot"),
         panning: {
-          enabled: true,
+          enabled: false,
           eventTypes: ["leftMouseDown", "mouseWheel"],
         },
         mousewheel: {
@@ -517,6 +481,13 @@ export default {
         history: true,
       });
       this.graph = graph;
+
+      // Add border and shadow to the canvas container
+      const drawCot = document.getElementById("draw-cot");
+      drawCot.style.border = "1px solid #ddd";
+      drawCot.style.boxShadow = "0px 4px 8px rgba(0, 0, 0, 0.1)";
+      drawCot.style.margin = "20px";
+      drawCot.style.backgroundColor = "#f5f5f5";
 
       graph.on("edge:contextmenu", ({ e, x, y, edge, view }) => {
         console.log(x, y, view);
@@ -790,7 +761,7 @@ header {
   display: flex;
   justify-content: flex-end;
   width: 100%;
-  height: 50px;
+  height: 40px;
   box-sizing: border-box;
 }
 
@@ -864,5 +835,18 @@ header i {
 
 ::-webkit-scrollbar {
   width: 0;
+}
+
+#draw-cot {
+  margin: 30px 30px 30px 30px;
+  // margin: 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #f5f5f5;
+  overflow: hidden; /* 限制内容超出 */
+  max-width: 90%; /* 设置最大宽度 */
+  max-height: calc(100vh - 220px); /* 设置最大高度 */
+  // max-height: 100%;
 }
 </style>
