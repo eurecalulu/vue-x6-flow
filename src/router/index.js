@@ -10,9 +10,10 @@ const routes = [
     component: () => import(/* webpackChunkName: "about" */ "@/views/test"),
   },
   {
-    path: "/dragDemo",
+    path: "/diagramEditor",
     name: "dragDemo",
-    component: () => import(/* webpackChunkName: "about" */ "@/views/dragDemo"),
+    component: () =>
+      import(/* webpackChunkName: "about" */ "@/views/diagramEditor/index.vue"),
   },
   {
     path: "/dargeDemo",
@@ -23,6 +24,22 @@ const routes = [
     path: "/demo3",
     name: "demo3",
     component: () => import("@/views/demo3"),
+  },
+  {
+    path: "/projectManagement",
+    name: "projectManagement",
+    component: () => import("@/views/projectManagement"),
+  },
+  {
+    path: "/modelManagement",
+    name: "modelManagement",
+    component: () => import("@/views/modelManagement"),
+  },
+  {
+    path: "/diagramEditor/:diagramId",
+    name: "DiagramEditor",
+    component: () => import("@/views/diagramEditor/index.vue"),
+    props: true, // 允许通过路由参数传递 diagramId
   },
 ];
 

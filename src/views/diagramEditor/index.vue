@@ -1,13 +1,36 @@
 <template>
-  <div id="coverCot" style="width: 100vw; height: 100vh; overflow: hidden">
-    <section class="section-cot" style="width: 100%; height: 100%">
-      <div id="container" @click.stop="hideFn">
-        <MenuBar
-          v-if="showContextMenu"
-          ref="menuBar"
-          @callBack="contextMenuFn"
-        />
-        <header>
+  <el-container style="height: 100vh; background-color: #f5f5f5">
+    <!-- 顶部标题栏 -->
+    <el-header
+      style="
+        background-color: #fdfdfd;
+        color: black;
+        text-align: center;
+        font-size: 1.5rem;
+        border-bottom: 1px solid #ddd;
+      "
+    >
+      TestStudio
+    </el-header>
+
+    <el-container>
+      <!-- 左侧固定组件栏 -->
+      <el-aside width="300px" style="background-color: #f0f0f0">
+        <Drawer @addNode="addNode" />
+      </el-aside>
+
+      <!-- 主内容区 -->
+      <el-container>
+        <!-- 工具栏 -->
+        <el-header
+          style="
+            background-color: #fdfdfd;
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+          "
+        >
           <el-tooltip
             class="item"
             effect="dark"
@@ -83,29 +106,59 @@
               @click="lockFn()"
             />
           </el-tooltip>
-        </header>
-        <div id="draw-cot" />
-        <Drawer ref="drawer" @addNode="addNode" />
-      </div>
-    </section>
-    <DialogCondition ref="dialogCondition"></DialogCondition>
-    <DialogMysql ref="dialogMysql"></DialogMysql>
-  </div>
+          <!-- 其他工具按钮 -->
+        </el-header>
+
+        <!-- 标签页和画布 -->
+        <el-main style="position: relative; padding: 0">
+          <!-- 标签页区域使用 el-tabs -->
+          <div @click.stop="hideFn">
+            <MenuBar
+              v-if="showContextMenu"
+              ref="menuBar"
+              @callBack="contextMenuFn"
+            />
+            <el-tabs v-model="activeTab" type="card">
+              <el-tab-pane
+                v-for="(tab, index) in tabs"
+                :key="tab.name"
+                :label="tab.name"
+                :name="String(index)"
+              >
+                <!-- 每个标签页对应的内容或画布 -->
+                <div
+                  v-if="index === 0"
+                  ref="drawCot"
+                  id="draw-cot"
+                  style="height: calc(100vh - 150px); background-color: #1b1b1b"
+                >
+                  <!-- 画布内容在此 -->
+                </div>
+              </el-tab-pane>
+            </el-tabs>
+            <NodeDetailsModal
+              :visible.sync="isModalVisible"
+              :nodeData="selectedNodeData"
+              @update:visible="isModalVisible = false"
+              @submit="handleSubmit"
+            />
+          </div>
+        </el-main>
+      </el-container>
+    </el-container>
+  </el-container>
 </template>
 
 <script>
 import { Graph, Path } from "@antv/x6";
 import "@antv/x6-vue-shape";
-
-import database from "./components/nodeTheme/database.vue";
-import condition from "./components/nodeTheme/condition.vue";
-import onlyout from "./components/nodeTheme/onlyOut.vue";
-import onlyin from "./components/nodeTheme/onlyIn.vue";
-import DataJson from "./components/data";
+// import DataJson from "./components/data";
 import MenuBar from "./components/menuBar";
 import Drawer from "./components/drawer";
-import DialogCondition from "./components/dialog/condition.vue";
-import DialogMysql from "./components/dialog/mysql.vue";
+import NodeDetailsModal from "./components/NodeDetailsModal.vue";
+import api from "../../api.js";
+// import DialogCondition from "./components/dialog/condition.vue";
+// import DialogMysql from "./components/dialog/mysql.vue";
 
 const nodeStatusList = [
   [
@@ -183,23 +236,46 @@ const nodeStatusList = [
 ];
 
 export default {
-  name: "App",
-  components: { MenuBar, Drawer, DialogCondition, DialogMysql },
+  name: "DiagramEditor",
+  components: { NodeDetailsModal, Drawer, MenuBar },
   data() {
     return {
       graph: "",
       timer: "",
       isLock: false,
       showContextMenu: false,
+      projectName: "TestStudio",
+      tabs: [
+        { name: "图面1", content: "画布1内容" },
+        { name: "光伏1", content: "画布2内容" },
+      ],
+      activeTab: "0", // 默认选中的标签页索引
+      isModalVisible: false,
+      selectedNodeData: {
+        id: "node-1731268485649",
+        label: "生成器",
+        type: "generator",
+        fillColor: "#409EFF",
+        lineWidth: 2,
+        parameterName: "额定功率",
+        input: "Real P",
+        output: "Real Heat",
+        script: "der(kWh) = P",
+      },
     };
   },
+  props: ["diagramId"],
   mounted() {
     // 初始化 graph
     this.initGraph();
-    // 按钮绑定
+    // 按钮绑定，绑定键盘快捷键
     this.keyBindFn();
-    // 执行
+    // 执行，加载初始数据并开始运行
     this.startFn();
+    this.graph.on("node:dblclick", ({ node }) => {
+      this.selectedNodeData = node.getData();
+      this.isModalVisible = true;
+    });
   },
   methods: {
     getNodeById(id) {
@@ -211,17 +287,50 @@ export default {
     initGraph() {
       // 注册节点
       Graph.registerNode(
-        "dag-condition",
+        "custom-node",
         {
-          inherit: "vue-shape",
-          width: 180,
-          height: 36,
-          component: {
-            template: `<condition />`,
-            components: {
-              condition,
+          inherit: "rect",
+          width: 100,
+          height: 120,
+          attrs: {
+            body: {
+              stroke: "#5F95FF",
+              fill: "#EFF4FF",
+              rx: 6, // 圆角效果
+              ry: 6,
+            },
+            image: {
+              "xlink:href": "", // 图片 URL 动态配置
+              width: 60,
+              height: 60,
+              refX: 20, // 图片居中显示
+              refY: 10,
+            },
+            label: {
+              text: "", // 标签文本动态配置
+              refY: 80, // 调整文本位置，使其在图片下方
+              textAnchor: "middle",
+              fontSize: 14,
+              fill: "#333",
             },
           },
+          data: {
+            type: "custom-node", // 定义节点的类型
+          },
+          markup: [
+            {
+              tagName: "rect",
+              selector: "body",
+            },
+            {
+              tagName: "image",
+              selector: "image",
+            },
+            {
+              tagName: "text",
+              selector: "label",
+            },
+          ],
           ports: {
             groups: {
               top: {
@@ -230,7 +339,19 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#C2C8D5",
+                    stroke: "#5F95FF",
+                    strokeWidth: 1,
+                    fill: "#fff",
+                  },
+                },
+              },
+              right: {
+                position: "right",
+                attrs: {
+                  circle: {
+                    r: 4,
+                    magnet: true,
+                    stroke: "#5F95FF",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -242,145 +363,31 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#C2C8D5",
+                    stroke: "#5F95FF",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
                 },
               },
-            },
-          },
-        },
-        true
-      );
-
-      Graph.registerNode(
-        "dag-output",
-        {
-          inherit: "vue-shape",
-          width: 180,
-          height: 36,
-          component: {
-            template: `<onlyout />`,
-            components: {
-              onlyout,
-            },
-          },
-          ports: {
-            groups: {
-              top: {
-                position: "top",
+              left: {
+                position: "left",
                 attrs: {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#C2C8D5",
-                    strokeWidth: 1,
-                    fill: "#fff",
-                  },
-                },
-              },
-              bottom: {
-                position: "bottom",
-                attrs: {
-                  circle: {
-                    r: 4,
-                    magnet: true,
-                    stroke: "#C2C8D5",
+                    stroke: "#5F95FF",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
                 },
               },
             },
-          },
-        },
-        true
-      );
-
-      Graph.registerNode(
-        "dag-onlyIn",
-        {
-          inherit: "vue-shape",
-          width: 180,
-          height: 36,
-          component: {
-            template: `<onlyin />`,
-            components: {
-              onlyin,
-            },
-          },
-          ports: {
-            groups: {
-              top: {
-                position: "top",
-                attrs: {
-                  circle: {
-                    r: 4,
-                    magnet: true,
-                    stroke: "#C2C8D5",
-                    strokeWidth: 1,
-                    fill: "#fff",
-                  },
-                },
-              },
-              bottom: {
-                position: "bottom",
-                attrs: {
-                  circle: {
-                    r: 4,
-                    magnet: true,
-                    stroke: "#C2C8D5",
-                    strokeWidth: 1,
-                    fill: "#fff",
-                  },
-                },
-              },
-            },
-          },
-        },
-        true
-      );
-
-      Graph.registerNode(
-        "dag-node",
-        {
-          inherit: "vue-shape",
-          width: 180,
-          height: 36,
-          component: {
-            template: `<database />`,
-            components: {
-              database,
-            },
-          },
-          ports: {
-            groups: {
-              top: {
-                position: "top",
-                attrs: {
-                  circle: {
-                    r: 4,
-                    magnet: true,
-                    stroke: "#C2C8D5",
-                    strokeWidth: 1,
-                    fill: "#fff",
-                  },
-                },
-              },
-              bottom: {
-                position: "bottom",
-                attrs: {
-                  circle: {
-                    r: 4,
-                    magnet: true,
-                    stroke: "#C2C8D5",
-                    strokeWidth: 1,
-                    fill: "#fff",
-                  },
-                },
-              },
-            },
+            items: [
+              { id: `top-${Date.now()}`, group: "top" }, // 动态生成 ID
+              { id: `right-${Date.now()}`, group: "right" },
+              { id: `bottom-${Date.now()}`, group: "bottom" },
+              { id: `left-${Date.now()}`, group: "left" },
+            ],
           },
         },
         true
@@ -392,15 +399,19 @@ export default {
           inherit: "edge",
           attrs: {
             line: {
-              stroke: "#C2C8D5",
+              stroke: "#696969",
               strokeWidth: 2,
               targetMarker: {
-                name: "block",
+                name: "classic",
                 width: 12,
                 height: 8,
               },
             },
           },
+          connector: {
+            name: "smooth", // 使用平滑曲线连接
+          },
+          // zIndex: 1, // 提升 z-index 确保边显示在前面
         },
         true
       );
@@ -573,7 +584,7 @@ export default {
 
       graph.on("node:change:data", ({ node }) => {
         const edges = graph.getIncomingEdges(node);
-        const { status } = node.getData();
+        // const { status } = node.getData();
         edges?.forEach((edge) => {
           if (status === "running") {
             edge.attr("line/strokeDasharray", 5);
@@ -589,16 +600,16 @@ export default {
       });
     },
     async showNodeStatus(statusList) {
-      const status = statusList.shift();
-      status?.forEach((item) => {
-        const { id, status } = item;
-        const node = this.graph.getCellById(id);
-        const data = node.getData();
-        node.setData({
-          ...data,
-          status: status,
-        });
-      });
+      // const status = statusList.shift();
+      // status?.forEach((item) => {
+      //   const { id, status } = item;
+      //   const node = this.graph.getCellById(id);
+      //   // const data = node.getData();
+      //   // node.setData({
+      //   //   ...data,
+      //   //   status: status,
+      //   // });
+      // });
       this.timer = setTimeout(() => {
         this.showNodeStatus(statusList);
       }, 300);
@@ -611,10 +622,18 @@ export default {
           cells.push(this.graph.createEdge(item));
         } else {
           delete item.component;
-          cells.push(this.graph.createNode(item));
+          cells.push(
+            this.graph.createNode({
+              ...item,
+              data: {
+                label: item.data?.label || "未命名", // 防止 label 为 undefined
+                icon: item.data?.icon || "https://via.placeholder.com/50", // 设置默认图标
+              },
+            })
+          ); // 关闭括号时确保格式正确
         }
       });
-      this.graph.resetCells(cells);
+      this.graph.resetCells(cells); // 加载所有节点和边
     },
     zoomFn(num) {
       this.graph.zoom(num);
@@ -626,7 +645,7 @@ export default {
     },
     startFn(item) {
       this.timer && clearTimeout(this.timer);
-      this.init(item || DataJson);
+      this.init(item);
       this.showNodeStatus(Object.assign([], nodeStatusList));
       this.graph.centerContent();
     },
@@ -677,6 +696,9 @@ export default {
       });
     },
     saveFn() {
+      const json = this.graph.toJSON(); // 获取流程图的 JSON 格式数据
+      console.log("save");
+      console.log(JSON.stringify(json, null, 2)); // 打印在控制台，格式化输出
       localStorage.setItem(
         "x6Json",
         JSON.stringify(this.graph.toJSON({ diff: true }))
@@ -719,9 +741,45 @@ export default {
     showDrawerFn() {
       this.$refs.drawer.visible = !this.$refs.drawer.visible;
     },
-    addNode(option) {
-      const p = this.graph.pageToLocal(option.x, option.y);
-      this.graph.addNode(Object.assign({}, option, p));
+    addNode({ icon, label, x, y }) {
+      const { left, top, right, bottom } = document
+        .getElementById("draw-cot")
+        .getBoundingClientRect();
+      if (x > left && x < right && y > top && y < bottom) {
+        const localPosition = this.graph.pageToLocal(x, y); // 转换成相对坐标
+        this.graph.addNode({
+          label: label,
+          x: localPosition.x,
+          y: localPosition.y,
+          shape: "custom-node", // 节点形状
+          data: {
+            id: `node-${Date.now()}`,
+            label: label,
+          },
+          attrs: {
+            image: {
+              "xlink:href": icon,
+            },
+            label: {
+              text: label,
+            },
+          },
+        });
+      }
+    },
+    handleSubmit(nodeData) {
+      // 调用 api.js 中的 updateNode 方法
+      api
+        .updateNode(nodeData.id, nodeData)
+        .then((response) => {
+          console.log("提交成功：", response.data);
+          // 可以根据需要在此处处理提交成功的后续操作
+          this.$message.success("节点数据提交成功！");
+        })
+        .catch((error) => {
+          console.error("提交失败：", error);
+          this.$message.error("节点数据提交失败，请重试！");
+        });
     },
   },
 };
@@ -780,6 +838,28 @@ header i {
 .section-cot #container #draw-cot {
   width: 100%;
   height: 100%;
+}
+
+.custom-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  width: 100px;
+  height: 100px;
+}
+
+.node-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+}
+
+.node-label {
+  margin-top: 8px;
+  color: #333;
+  font-size: 14px;
 }
 
 ::-webkit-scrollbar {

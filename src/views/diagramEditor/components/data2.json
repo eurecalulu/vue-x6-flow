@@ -1,0 +1,76 @@
+[
+  {
+    "shape": "dag-edge",
+    "id": "041aa74c-3af5-49ab-869f-fbf4163530e7",
+    "source": {
+      "cell": "4c361d64-9358-4458-8781-e87bf0a23921",
+      "port": "out-1730355179007"
+    },
+    "target": {
+      "cell": "1e4ae07e-36aa-4ed1-b423-1d2c55bcbffa",
+      "port": "in-1730355183536"
+    }
+  },
+  {
+    "position": {
+      "x": 331,
+      "y": 240
+    },
+    "size": {
+      "width": 100,
+      "height": 100
+    },
+    "shape": "generator-node",
+    "ports": {
+      "items": [
+        {
+          "id": "in-1730355179007",
+          "group": "top"
+        },
+        {
+          "id": "out-1730355179007",
+          "group": "bottom"
+        }
+      ]
+    },
+    "id": "4c361d64-9358-4458-8781-e87bf0a23921",
+    "data": {
+      "type": "generatorNode",
+      "label": "生成器",
+      "name": "生成器"
+    }
+  },
+  {
+    "position": {
+      "x": 510,
+      "y": 240
+    },
+    "size": {
+      "width": 100,
+      "height": 100
+    },
+    "shape": "air-conditioner-node",
+    "ports": {
+      "items": [
+        {
+          "id": "in-1730355183536",
+          "group": "left"
+        },
+        {
+          "id": "out-1730355183536",
+          "group": "right"
+        },
+        {
+          "id": "bottom-1730355183536",
+          "group": "bottom"
+        }
+      ]
+    },
+    "id": "1e4ae07e-36aa-4ed1-b423-1d2c55bcbffa",
+    "data": {
+      "type": "airConditionerNode",
+      "label": "空调",
+      "name": "空调"
+    }
+  }
+]
