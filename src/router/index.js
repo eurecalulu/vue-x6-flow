@@ -6,8 +6,8 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: "/",
-    name: "Test",
-    component: () => import(/* webpackChunkName: "about" */ "@/views/test"),
+    name: "mainPage",
+    component: () => import(/* webpackChunkName: "about" */ "@/views/mainPage"),
   },
   {
     path: "/diagramEditor",
@@ -36,10 +36,10 @@ const routes = [
     component: () => import("@/views/modelManagement"),
   },
   {
-    path: "/diagramEditor/:diagramId",
+    path: "/diagramEditor/:diagramId/:modelId",
     name: "DiagramEditor",
     component: () => import("@/views/diagramEditor/index.vue"),
-    props: true, // 允许通过路由参数传递 diagramId
+    props: true, // 允许通过路由参数传递 diagramId 和 modelId
   },
 ];
 

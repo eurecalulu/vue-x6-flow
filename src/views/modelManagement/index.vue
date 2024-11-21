@@ -5,34 +5,33 @@
       <el-col :span="6">
         <el-input v-model="modelSearchQuery" placeholder="模型搜索"></el-input>
       </el-col>
-      <el-col :span="4">
-        <el-select v-model="selectedType" placeholder="模型类别">
-          <el-option
-            v-for="item in modelCategories"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          ></el-option>
-        </el-select>
-      </el-col>
+      <!--      <el-col :span="4">-->
+      <!--        <el-select v-model="selectedType" placeholder="模型类别">-->
+      <!--          <el-option-->
+      <!--            v-for="item in modelCategories"-->
+      <!--            :key="item.value"-->
+      <!--            :label="item.label"-->
+      <!--            :value="item.value"-->
+      <!--          ></el-option>-->
+      <!--        </el-select>-->
+      <!--      </el-col>-->
       <el-col :span="2">
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button class="gray-button" type="primary" @click="handleSearch"
+          >搜索</el-button
+        >
       </el-col>
       <el-col :span="4" :offset="8" class="create-project">
-        <el-button type="success" @click="openCreateModal">新建</el-button>
+        <el-button class="gray-button" type="success" @click="openCreateModal"
+          >新建</el-button
+        >
       </el-col>
     </el-row>
 
     <!-- 表格 -->
-    <el-table :data="modelData" style="width: 100%" class="model-table">
-      <el-table-column
-        prop="name"
-        label="模型名"
-        width="150"
-        sortable
-      ></el-table-column>
+    <el-table :data="modelData" class="model-table">
+      <el-table-column prop="name" label="模型名" sortable></el-table-column>
       <!-- 使用 el-tooltip 包裹 modelDescription -->
-      <el-table-column label="模型说明" width="150">
+      <el-table-column label="模型说明">
         <template v-slot="scope">
           <el-tooltip
             class="item"
@@ -47,21 +46,23 @@
           </el-tooltip>
         </template>
       </el-table-column>
+      <el-table-column prop="type" label="模型类别" sortable></el-table-column>
       <el-table-column
-        prop="type"
-        label="模型类别"
-        width="150"
+        prop="categoryId"
+        label="模型目录"
         sortable
       ></el-table-column>
-      <el-table-column label="操作" width="180">
+      <el-table-column label="操作">
         <template slot-scope="scope">
           <el-link @click="editModel(scope.row)">编辑</el-link>
           <el-divider direction="vertical"></el-divider>
+          <el-link @click="openDiagramEditor(scope.row)">设计</el-link>
+          <el-divider direction="vertical"></el-divider>
           <el-link @click="exportModel(scope.row)">导出</el-link>
           <el-divider direction="vertical"></el-divider>
-          <el-link type="danger" @click="deleteModel(scope.row)">删除</el-link>
-          <el-divider direction="vertical"></el-divider>
-          <el-link @click="openDiagramEditor(scope.row)">内容编辑</el-link>
+          <el-link class="low-saturation-danger" @click="deleteModel(scope.row)"
+            >删除</el-link
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -73,7 +74,7 @@
       :total="total"
       :page-size="pageSize"
       @current-change="handlePageChange"
-      style="text-align: center; margin-top: 20px"
+      class="dark-pagination"
     ></el-pagination>
 
     <!-- 新建/编辑模型 Modal -->
@@ -98,25 +99,73 @@ export default {
   data() {
     return {
       modelSearchQuery: "",
-      selectedType: "",
+      // selectedType: "",
       modelCategories: [
         { value: "air-conditioning", label: "空调机理模型" },
         { value: "energy-storage", label: "储能机理模型" },
         { value: "solar", label: "太阳能模型" },
+        { value: "wind-power", label: "风力发电模型" },
+        { value: "water-conservation", label: "水利模型" },
       ],
       modelData: [
-        // {
-        //   modelName: "大金空调机理模型",
-        //   modelDescription: "大金空调机理模型",
-        //   modelCategory: "空调机理模型",
-        // },
-        // {
-        //   modelName: "华电储能机理模型",
-        //   modelDescription: "储能机理模型",
-        //   modelCategory: "储能机理模型",
-        // },
+        {
+          name: "大金空调机理模型",
+          type: "空调机理模型",
+          properties: {
+            modelDescription: "大金空调机理模型",
+          },
+        },
+        {
+          name: "华电储能机理模型",
+          type: "储能机理模型",
+          properties: {
+            modelDescription: "华电储能机理模型",
+          },
+        },
+        {
+          name: "晶科太阳能模型",
+          type: "太阳能模型",
+          properties: {
+            modelDescription: "晶科太阳能模型",
+          },
+        },
+        {
+          name: "国电风力发电模型",
+          type: "风力发电模型",
+          properties: {
+            modelDescription: "国电风力发电模型",
+          },
+        },
+        {
+          name: "长江水利模型",
+          type: "水利模型",
+          properties: {
+            modelDescription: "长江水利模型",
+          },
+        },
+        {
+          name: "格力空调机理模型",
+          type: "空调机理模型",
+          properties: {
+            modelDescription: "格力空调机理模型",
+          },
+        },
+        {
+          name: "南方电网储能模型",
+          type: "储能机理模型",
+          properties: {
+            modelDescription: "南方电网储能模型",
+          },
+        },
+        {
+          name: "天合光能太阳能模型",
+          type: "太阳能模型",
+          properties: {
+            modelDescription: "天合光能太阳能模型",
+          },
+        },
       ],
-      total: 0,
+      total: 8,
       pageSize: 8,
       isCreateModalVisible: false,
       currentModel: null,
@@ -137,36 +186,95 @@ export default {
       // );
       this.fetchModelList();
     },
+    // async handleCreateOrUpdateModel(form) {
+    //   try {
+    //     if (form.id) {
+    //       // 更新模型
+    //       const response = await api.updateModel(form);
+    //       if (response.data.status === 200) {
+    //         this.$message.success("更新模型成功");
+    //       }
+    //     } else {
+    //       // 创建 diagram，并将其关联到新模型
+    //       const diagramResponse = await this.addDiagram({ name: form.name });
+    //       const diagramId = diagramResponse.data.id;
+    //       // 新建模型
+    //       // 新建模型并包含 diagramId
+    //       const modelData = {
+    //         ...form,
+    //         diagramId, // 将生成的 diagramId 作为模型的属性
+    //       };
+    //
+    //       const response = await api.addModel(modelData);
+    //       if (response.data.status === 200) {
+    //         this.$message.success("新建模型成功");
+    //       }
+    //     }
+    //     this.fetchModelList();
+    //   } catch (error) {
+    //     this.$message.error("操作失败，请重试");
+    //   }
+    //   this.closeCreateModal();
+    // },
+
     async handleCreateOrUpdateModel(form) {
       try {
         if (form.id) {
           // 更新模型
-          const response = await api.updateModel(form);
-          if (response.data.status === 200) {
-            this.$message.success("更新模型成功");
-          }
+          await this.updateModel(form);
         } else {
           // 创建 diagram，并将其关联到新模型
-          const diagramResponse = await this.addDiagram({ name: form.name });
-          const diagramId = diagramResponse.data.id;
-          // 新建模型
+          const diagramId = await this.createDiagram(form.name);
           // 新建模型并包含 diagramId
-          const modelData = {
-            ...form,
-            diagramId, // 将生成的 diagramId 作为模型的属性
-          };
-
-          const response = await api.addModel(modelData);
-          if (response.data.status === 200) {
-            this.$message.success("新建模型成功");
-          }
+          await this.createModel({ ...form, diagramId });
         }
         this.fetchModelList();
       } catch (error) {
-        this.$message.error("操作失败，请重试");
+        this.$message.error(`操作失败：${error.message}`);
+      } finally {
+        this.closeCreateModal();
       }
-      this.closeCreateModal();
     },
+
+    async updateModel(form) {
+      try {
+        const response = await api.updateModel(form);
+        if (response.data.status === 200) {
+          this.$message.success("更新模型成功");
+        } else {
+          throw new Error("更新模型失败");
+        }
+      } catch (error) {
+        throw new Error(`更新模型请求失败：${error.message}`);
+      }
+    },
+
+    async createDiagram(name) {
+      try {
+        const response = await api.addDiagram({ name });
+        if (response.data.status === 201) {
+          return response.data.data.id; // 返回 diagramId
+        } else {
+          throw new Error("创建 Diagram 失败");
+        }
+      } catch (error) {
+        throw new Error(`创建 Diagram 请求失败：${error.message}`);
+      }
+    },
+
+    async createModel(modelData) {
+      try {
+        const response = await api.addModel(modelData);
+        if (response.data.status === 201) {
+          this.$message.success("新建模型成功");
+        } else {
+          throw new Error("新建模型失败");
+        }
+      } catch (error) {
+        throw new Error(`新建模型请求失败：${error.message}`);
+      }
+    },
+
     async editModel(row) {
       const response = await api.queryModel(row.id);
       if (response.data.status === 200) {
@@ -195,7 +303,7 @@ export default {
         currentPage: this.currentPage,
         pageSize: this.pageSize,
         searchKey: this.modelSearchQuery,
-        selectedType: this.selectedType,
+        // selectedType: this.selectedType,
       };
       const response = await api.queryModelList(data);
       if (response.data.status === 200) {
@@ -219,8 +327,12 @@ export default {
     },
     async openDiagramEditor(row) {
       let diagramId = row.diagramId;
+      let modelId = row.id;
       // 跳转到 Diagram 编辑页面，传递模型的 diagramId
-      await this.$router.push({ name: "DiagramEditor", params: { diagramId } });
+      await this.$router.push({
+        name: "DiagramEditor",
+        params: { diagramId, modelId },
+      });
     },
   },
 };
@@ -228,8 +340,9 @@ export default {
 
 <style scoped>
 .container {
-  max-width: 800px;
-  margin: 40px auto;
+  max-width: 95%;
+  max-height: 90%;
+  margin: 20px auto;
   padding: 20px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   background-color: #fff;
@@ -242,7 +355,9 @@ export default {
   text-align: right;
 }
 .model-table {
+  width: 100%;
   margin-top: 20px;
+  margin-bottom: 50px;
 }
 
 .truncate-text {
@@ -258,5 +373,40 @@ export default {
   max-width: 300px; /* 你可以根据需要调整这个宽度 */
   white-space: normal; /* 允许 tooltip 中的文字换行 */
   word-break: break-word; /* 控制长单词的换行 */
+}
+
+/* 深灰色按钮样式 */
+.gray-button {
+  background-color: #4a4a4a !important;
+  color: #ffffff !important;
+  border: none;
+  transition: background-color 0.3s ease;
+}
+.gray-button:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* 分页器深灰色样式 */
+.dark-pagination ::v-deep .el-pager li,
+.dark-pagination ::v-deep .el-pagination__next,
+.dark-pagination ::v-deep .el-pagination__prev {
+  color: #555555 !important;
+}
+
+.dark-pagination ::v-deep .el-pager li.active,
+.dark-pagination ::v-deep .el-pagination__next:hover,
+.dark-pagination ::v-deep .el-pagination__prev:hover {
+  background-color: #555555 !important;
+  color: #ffffff !important;
+}
+
+/* 饱和度更低的红色删除链接样式 */
+.low-saturation-danger {
+  color: #8b0000 !important; /* 更柔和的红色 */
+  transition: color 0.3s ease;
+}
+
+.low-saturation-danger:hover {
+  color: #b22222 !important; /* 鼠标悬停时稍深的红色 */
 }
 </style>

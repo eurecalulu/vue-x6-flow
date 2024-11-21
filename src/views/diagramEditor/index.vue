@@ -16,7 +16,7 @@
         align-items: center;
       "
     >
-      三峡课题——低代码平台
+      综合能源EMS能碳云智能优化调控平台
     </el-header>
 
     <el-container>
@@ -65,9 +65,9 @@
             <el-tooltip content="保存" placement="bottom">
               <i class="el-icon-upload" @click="saveFn()" />
             </el-tooltip>
-            <el-tooltip content="加载保存页面" placement="bottom">
-              <i class="el-icon-link" @click="loadFn()" />
-            </el-tooltip>
+            <!--            <el-tooltip content="加载保存页面" placement="bottom">-->
+            <!--              <i class="el-icon-link" @click="loadFn()" />-->
+            <!--            </el-tooltip>-->
             <el-tooltip content="是否禁用" placement="bottom">
               <i
                 :class="{ 'el-icon-lock': isLock, 'el-icon-unlock': !isLock }"
@@ -123,83 +123,9 @@ import MenuBar from "./components/menuBar";
 import Drawer from "./components/drawer";
 import NodeDetailsModal from "./components/NodeDetailsModal.vue";
 import api from "../../api.js";
+import { Transform } from "@antv/x6-plugin-transform";
 // import DialogCondition from "./components/dialog/condition.vue";
 // import DialogMysql from "./components/dialog/mysql.vue";
-
-const nodeStatusList = [
-  [
-    {
-      id: "1",
-      status: "running",
-    },
-    {
-      id: "2",
-      status: "default",
-    },
-    {
-      id: "3",
-      status: "default",
-    },
-    {
-      id: "4",
-      status: "default",
-    },
-  ],
-  [
-    {
-      id: "1",
-      status: "success",
-    },
-    {
-      id: "2",
-      status: "running",
-    },
-    {
-      id: "3",
-      status: "default",
-    },
-    {
-      id: "4",
-      status: "default",
-    },
-  ],
-  [
-    {
-      id: "1",
-      status: "success",
-    },
-    {
-      id: "2",
-      status: "success",
-    },
-    {
-      id: "3",
-      status: "running",
-    },
-    {
-      id: "4",
-      status: "running",
-    },
-  ],
-  [
-    {
-      id: "1",
-      status: "success",
-    },
-    {
-      id: "2",
-      status: "success",
-    },
-    {
-      id: "3",
-      status: "success",
-    },
-    {
-      id: "4",
-      status: "failed",
-    },
-  ],
-];
 
 export default {
   name: "DiagramEditor",
@@ -219,31 +145,104 @@ export default {
       isModalVisible: false,
       selectedNodeData: {
         id: "node-1731268485649",
+        name: "生成器",
         label: "生成器",
-        type: "generator",
-        fillColor: "#f5f5f5",
-        lineWidth: 2,
-        parameterName: "额定功率",
-        input: "Real P",
-        output: "Real Heat",
-        script: "der(kWh) = P",
+        type: "控制组件",
+        parameters: "额定功率",
+        inputs: "Real P",
+        outputs: "Real Heat",
+        scripts: "der(kWh) = P",
+        properties: {
+          fillColor: "#f5f5f5",
+          lineWidth: 2,
+        },
       },
+      graphProperties: {},
+      autoSaveInterval: null,
     };
   },
-  props: ["diagramId"],
+  props: ["diagramId", "modelId"],
   mounted() {
     // 初始化 graph
     this.initGraph();
     // 按钮绑定，绑定键盘快捷键
     this.keyBindFn();
+    // 加载图表数据
+    this.loadGraphData();
     // 执行，加载初始数据并开始运行
     this.startFn();
-    this.graph.on("node:dblclick", ({ node }) => {
-      this.selectedNodeData = node.getData();
-      this.isModalVisible = true;
-    });
+    // 启动自动保存定时器，每3分钟执行一次
+    this.autoSaveInterval = setInterval(() => {
+      this.saveFn();
+    }, 180000); // 180000 毫秒 = 3 分钟
+  },
+  beforeDestroy() {
+    // 在组件销毁前清除定时器
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval);
+    }
   },
   methods: {
+    // 根据 diagramID 从后端获取图表数据
+    async loadGraphData() {
+      try {
+        const response = await api.queryDiagram(this.diagramId); // 假设你的接口是 getDiagramData
+        const graphData = response.data?.data?.properties?.graphData || {
+          cells: [],
+        };
+        this.graphProperties = response.data?.properties || {};
+        console.log("graph", graphData);
+        this.graph.fromJSON(graphData); // 使用 fromJson 加载图表数据
+      } catch (error) {
+        console.error("获取图表数据失败：", error);
+        this.graph.fromJSON({ cells: [] });
+      }
+    },
+
+    async handleNodeDblClick(nodeId) {
+      try {
+        if (!nodeId) {
+          throw new Error("节点ID无效");
+        }
+
+        let nodeData = null;
+
+        // 第一步：尝试从后端查询节点数据
+        const response = await api.queryNode(nodeId);
+        if (response && response.data && response.data.data) {
+          nodeData = response.data.data;
+        }
+
+        // 第二步：如果后端未找到节点数据，则从本地图形实例中获取
+        if (!nodeData) {
+          const node = this.graph.getCell(nodeId);
+          if (node) {
+            nodeData = node.getData();
+            // 如果需要，可以在这里添加更多逻辑来处理新节点的数据
+          }
+        }
+
+        // 第三步：如果仍然没有节点数据，则显示错误消息
+        if (!nodeData) {
+          this.$message.error("无法加载节点数据，请稍后重试！");
+          return;
+        }
+
+        // 将 nodeId 赋值给 nodeData.id（如果 nodeData 不存在 id 属性）
+        if (!nodeData.id) {
+          nodeData.id = nodeId;
+        }
+
+        // 将获取的节点数据赋值给 `selectedNodeData` 并显示侧边栏
+        this.selectedNodeData = nodeData;
+        console.log("selectedNodeData", nodeData);
+        this.isModalVisible = true;
+      } catch (error) {
+        console.error("获取节点数据失败：", error);
+        this.$message.error("无法加载节点数据，请稍后重试！");
+      }
+    },
+
     getNodeById(id) {
       return this.graph.getCellById(id);
     },
@@ -282,6 +281,17 @@ export default {
           },
           data: {
             type: "custom-node", // 定义节点的类型
+            // id: "", // 节点 ID
+            name: "", // 节点名字
+            diagramId: "", // 所属图的 ID
+            modelId: "", // 节点对应的模型类型
+            parameters: "", // 节点参数
+            inputs: "", // 输入
+            outputs: "", // 输出
+            scripts: "", // 脚本
+            signals: "", // 信号
+            properties: {}, // 其他属性信息（如颜色、大小等）
+            modelType: "",
           },
           markup: [
             {
@@ -492,6 +502,7 @@ export default {
       // drawCot.style.backgroundColor = "#f5f5f5";
 
       graph.on("edge:contextmenu", ({ e, x, y, edge, view }) => {
+        //  右键点击一条边触发
         console.log(x, y, view);
         this.showContextMenu = true;
         this.$nextTick(() => {
@@ -503,6 +514,7 @@ export default {
       });
 
       graph.on("node:contextmenu", ({ e, x, y, node, view }) => {
+        // 右键点击一个节点触发
         console.log(e, x, y, view);
         this.showContextMenu = true;
 
@@ -514,6 +526,8 @@ export default {
       });
 
       graph.on("edge:connected", ({ edge }) => {
+        // 当边被节点连接时触发
+        // 这里的目前都没太多用
         const source = graph.getCellById(edge.source.cell);
         const target = graph.getCellById(edge.target.cell);
 
@@ -571,7 +585,27 @@ export default {
           }
         });
       });
+
+      graph.on("node:dblclick", ({ node }) => {
+        this.selectedNodeData = node.getData();
+        const nodeId = node.id; // 获取节点的 ID
+        this.handleNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
+      });
+
+      graph.use(
+        new Transform({
+          resizing: {
+            enabled: true,
+          },
+          rotating: false,
+          ensure: () => {
+            // 这里可以添加确保图形状态的逻辑，例如限制缩放比例、旋转角度等
+            console.log("Ensure function called");
+          },
+        })
+      );
     },
+    // end of initGraph
     async showNodeStatus(statusList) {
       // const status = statusList.shift();
       // status?.forEach((item) => {
@@ -616,10 +650,10 @@ export default {
       num > 1 ? this.graph.zoom(num * -1) : this.graph.zoom(num);
       this.graph.centerContent();
     },
-    startFn(item) {
+    startFn() {
       this.timer && clearTimeout(this.timer);
-      this.init(item);
-      this.showNodeStatus(Object.assign([], nodeStatusList));
+      // this.init(item);
+      // this.showNodeStatus(Object.assign([], nodeStatusList));
       this.graph.centerContent();
     },
     createMenuFn() {},
@@ -668,21 +702,68 @@ export default {
         return false;
       });
     },
-    saveFn() {
-      const json = this.graph.toJSON(); // 获取流程图的 JSON 格式数据
-      console.log("save");
-      console.log(JSON.stringify(json, null, 2)); // 打印在控制台，格式化输出
-      localStorage.setItem(
-        "x6Json",
-        JSON.stringify(this.graph.toJSON({ diff: true }))
-      );
-    },
-    loadFn() {
-      this.timer && clearTimeout(this.timer);
-      const x6Json = JSON.parse(localStorage.getItem("x6Json"));
+    async saveFn() {
+      try {
+        const graphData = this.graph.toJSON(); // 获取当前图表的 JSON 数据
+        const diagramRequestBody = {
+          id: this.diagramId, // 假设 diagramId 存储了当前图表的 ID
+          properties: {
+            graphData: graphData, // 将 graphData 放在 properties 中
+            ...this.graphProperties,
+          },
+        };
 
-      this.startFn(x6Json.cells);
+        // 2. 提取节点和边的数据
+        const nodes = graphData.cells
+          .filter((cell) => cell.shape !== "dag-edge") // 筛选节点
+          .map((node) => ({
+            id: node.id, // 节点 ID
+            name: node.data?.name || "", // 节点的名字
+            diagramId: this.diagramId, // 节点所属的画面 ID
+            modelId: this.modelId, // 节点对应的模型类型
+            parameters: node.data?.parameters || "", // 参数
+            inputs: node.data?.inputs || "", // 输入
+            outputs: node.data?.outputs || "", // 输出
+            scripts: node.data?.scripts || "", // 脚本
+            signals: node.data?.signals || "", // 信号
+            properties: {
+              category: node.data?.properties?.category,
+              position: node.position, // 节点位置
+              shape: node.shape, // 节点形状
+              attrs: node.attrs, // 属性信息（如颜色、大小等）
+            },
+          }));
+
+        const edges = graphData.cells
+          .filter((cell) => cell.shape === "dag-edge") // 筛选边
+          .map((edge) => ({
+            id: edge.id, // 连接线 ID
+            name: edge.data?.label || "", // 连接线的名字
+            diagramId: this.diagramId, // 连接线所属的画面 ID
+            sourceNodeId: edge.source.cell || "", // 起始节点 ID
+            targetNodeId: edge.target.cell || "", // 终到节点 ID
+            properties: {
+              attrs: edge.attrs, // 属性信息（如颜色、线宽等）
+            },
+          }));
+
+        console.log("diagrammm", this.diagramId);
+        console.log("nodes", nodes);
+        await Promise.all([
+          api.updateDiagram(diagramRequestBody), // 保存图表
+          api.saveOrUpdateNodeList(this.diagramId, nodes), // 批量保存节点
+          api.saveOrUpdateLineList(this.diagramId, edges), // 批量保存边
+        ]);
+      } catch (error) {
+        console.error("保存图表数据失败：", error);
+      }
     },
+    // loadFn() {
+    //   this.timer && clearTimeout(this.timer);
+    //   const x6Json = JSON.parse(localStorage.getItem("x6Json"));
+    //
+    //   this.startFn(x6Json.cells);
+    // },
     lockFn() {
       this.isLock = !this.isLock;
       if (this.isLock) {
@@ -714,7 +795,7 @@ export default {
     showDrawerFn() {
       this.$refs.drawer.visible = !this.$refs.drawer.visible;
     },
-    addNode({ icon, label, x, y }) {
+    addNode({ icon, label, type, x, y }) {
       const { left, top, right, bottom } = document
         .getElementById("draw-cot")
         .getBoundingClientRect();
@@ -726,33 +807,72 @@ export default {
           y: localPosition.y,
           shape: "custom-node", // 节点形状
           data: {
-            id: `node-${Date.now()}`,
-            label: label,
+            // id: "",
+            name: label, //用于数据传递的label
+            diagramId: this.diagramId,
+            modelId: this.modelId,
+            parameters: "",
+            inputs: "",
+            outputs: "",
+            scripts: "",
+            signals: "",
+            properties: {
+              category: type,
+            },
+            // label: label,
           },
           attrs: {
             image: {
               "xlink:href": icon,
             },
             label: {
-              text: label,
+              text: label, // 页面上真正显示的标签
             },
           },
         });
       }
     },
-    handleSubmit(nodeData) {
-      // 调用 api.js 中的 updateNode 方法
-      api
-        .updateNode(nodeData.id, nodeData)
-        .then((response) => {
-          console.log("提交成功：", response.data);
-          // 可以根据需要在此处处理提交成功的后续操作
-          this.$message.success("节点数据提交成功！");
-        })
-        .catch((error) => {
-          console.error("提交失败：", error);
-          this.$message.error("节点数据提交失败，请重试！");
-        });
+
+    async handleSubmit(nodeData) {
+      console.log("提交的节点数据:", nodeData); // 检查数据结构
+      try {
+        // 调用 API 更新节点数据
+        await api.updateNode(nodeData);
+        this.$message.success("节点数据提交成功！");
+
+        // 获取图表中的节点
+        const node = this.graph.getCell(nodeData.id);
+        console.log("graph", this.graph.toJSON());
+        console.log("nodee", node);
+        if (node) {
+          // 更新节点的数据
+          node.setData(nodeData);
+
+          // 更新节点的视觉属性，例如标签
+          if (nodeData.name) {
+            node.attr("label/text", nodeData.name);
+          }
+
+          // 如果需要更新其他视觉属性，例如填充颜色
+          if (nodeData.properties && nodeData.properties.fillColor) {
+            node.attr("body/fill", nodeData.properties.fillColor);
+          }
+
+          // 如果有其他需要更新的视觉属性，可以在这里继续添加
+        } else {
+          console.warn(`未找到 ID 为 ${nodeData.id} 的节点`);
+        }
+      } catch (error) {
+        console.error("提交失败：", error);
+        if (error.response) {
+          console.error("服务器响应数据:", error.response.data);
+          this.$message.error(
+            `提交失败：${error.response.data.message || "请检查输入内容"}`
+          );
+        } else {
+          this.$message.error("网络错误，请稍后重试！");
+        }
+      }
     },
   },
 };

@@ -69,6 +69,9 @@ export default {
   copyNode(data) {
     return apiClient.post(`/simgui/node/copy/${data.id}`, data);
   },
+  saveOrUpdateNodeList(diagramId, nodes) {
+    return apiClient.post(`/simgui/node/saveOrUpdateList/${diagramId}`, nodes);
+  },
 
   // === Line APIs ===
   addLine(data) {
@@ -88,6 +91,10 @@ export default {
   },
   queryLineList(diagramId) {
     return apiClient.post(`/simgui/line/queryList/${diagramId}`);
+  },
+
+  saveOrUpdateLineList(diagramId, lines) {
+    return apiClient.post(`/simgui/line/saveOrUpdateList/${diagramId}`, lines);
   },
 
   // === Model APIs ===

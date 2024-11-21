@@ -61,17 +61,17 @@ export default {
       configList: [
         {
           label: "光伏",
-          type: "光伏组件",
+          type: "控制单元",
           icon: "https://i.imgur.com/or1EZsz.jpg",
         },
         {
           label: "生成器",
-          type: "光伏组件",
+          type: "处理单元",
           icon: "https://i.imgur.com/4xBTxfw.jpg",
         },
         {
           label: "控制器",
-          type: "控制组件",
+          type: "信号单元",
           icon: "https://i.imgur.com/hddYTc6.jpg",
         },
       ],
@@ -103,7 +103,13 @@ export default {
     dragend(item, event) {
       // Emit 绝对坐标
       const { x, y } = { x: event.clientX, y: event.clientY };
-      this.$emit("addNode", { icon: item.icon, label: item.label, x, y });
+      this.$emit("addNode", {
+        icon: item.icon,
+        label: item.label,
+        type: item.type,
+        x,
+        y,
+      });
     },
     // fetchComponentList() {
     //   api
