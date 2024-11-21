@@ -123,7 +123,7 @@ import MenuBar from "./components/menuBar";
 import Drawer from "./components/drawer";
 import NodeDetailsModal from "./components/NodeDetailsModal.vue";
 import api from "../../api.js";
-import { Transform } from "@antv/x6-plugin-transform";
+// import { Transform } from "@antv/x6-plugin-transform";
 // import DialogCondition from "./components/dialog/condition.vue";
 // import DialogMysql from "./components/dialog/mysql.vue";
 
@@ -315,7 +315,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#f7f7f7",
+                    stroke: "#333",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -327,7 +327,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#f7f7f7",
+                    stroke: "#333",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -339,7 +339,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#f7f7f7",
+                    stroke: "#333",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -351,7 +351,7 @@ export default {
                   circle: {
                     r: 4,
                     magnet: true,
-                    stroke: "#f7f7f7",
+                    stroke: "#333",
                     strokeWidth: 1,
                     fill: "#fff",
                   },
@@ -528,39 +528,39 @@ export default {
       graph.on("edge:connected", ({ edge }) => {
         // 当边被节点连接时触发
         // 这里的目前都没太多用
-        const source = graph.getCellById(edge.source.cell);
-        const target = graph.getCellById(edge.target.cell);
+        // const source = graph.getCellById(edge.source.cell);
+        // const target = graph.getCellById(edge.target.cell);
 
-        // 只允许输入
-        if (target.data.type == "output") {
-          return graph.removeEdge(edge.id);
-        }
-
-        // 只允许输出
-        if (source.data.type == "onlyIn") {
-          return graph.removeEdge(edge.id);
-        }
-
-        // 如果线源头的一端链接桩只允许输入
-        if (/in/.test(edge.source.port)) {
-          return graph.removeEdge(edge.id);
-        }
-
-        // 目标一端链接桩只允许输出
-        if (/out/.test(edge.target.port)) {
-          return graph.removeEdge(edge.id);
-        }
-
-        if (source.data.type == "condition") {
-          console.log(source);
-          console.log(target);
-          console.log(edge);
-          if (target.data.t === edge.id || target.data.f === edge.id) {
-            return graph.removeEdge(edge.id);
-          }
-          this.$refs.dialogCondition.visible = true;
-          this.$refs.dialogCondition.init(source.data, edge);
-        }
+        // // 只允许输入
+        // if (target.data.type == "output") {
+        //   return graph.removeEdge(edge.id);
+        // }
+        //
+        // // 只允许输出
+        // if (source.data.type == "onlyIn") {
+        //   return graph.removeEdge(edge.id);
+        // }
+        //
+        // // 如果线源头的一端链接桩只允许输入
+        // if (/in/.test(edge.source.port)) {
+        //   return graph.removeEdge(edge.id);
+        // }
+        //
+        // // 目标一端链接桩只允许输出
+        // if (/out/.test(edge.target.port)) {
+        //   return graph.removeEdge(edge.id);
+        // }
+        //
+        // if (source.data.type == "condition") {
+        //   console.log(source);
+        //   console.log(target);
+        //   console.log(edge);
+        //   if (target.data.t === edge.id || target.data.f === edge.id) {
+        //     return graph.removeEdge(edge.id);
+        //   }
+        //   this.$refs.dialogCondition.visible = true;
+        //   this.$refs.dialogCondition.init(source.data, edge);
+        // }
 
         edge.attr({
           line: {
@@ -592,18 +592,18 @@ export default {
         this.handleNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
       });
 
-      graph.use(
-        new Transform({
-          resizing: {
-            enabled: true,
-          },
-          rotating: false,
-          ensure: () => {
-            // 这里可以添加确保图形状态的逻辑，例如限制缩放比例、旋转角度等
-            console.log("Ensure function called");
-          },
-        })
-      );
+      // graph.use(
+      //   new Transform({
+      //     resizing: {
+      //       enabled: true,
+      //     },
+      //     rotating: false,
+      //     ensure: () => {
+      //       // 这里可以添加确保图形状态的逻辑，例如限制缩放比例、旋转角度等
+      //       console.log("Ensure function called");
+      //     },
+      //   })
+      // );
     },
     // end of initGraph
     async showNodeStatus(statusList) {
@@ -795,42 +795,263 @@ export default {
     showDrawerFn() {
       this.$refs.drawer.visible = !this.$refs.drawer.visible;
     },
-    addNode({ icon, label, type, x, y }) {
+    // addNode({ icon, label, type, x, y }) {
+    //   const { left, top, right, bottom } = document
+    //     .getElementById("draw-cot")
+    //     .getBoundingClientRect();
+    //   if (x > left && x < right && y > top && y < bottom) {
+    //     const localPosition = this.graph.pageToLocal(x, y); // 转换成相对坐标
+    //     this.graph.addNode({
+    //       label: label,
+    //       x: localPosition.x,
+    //       y: localPosition.y,
+    //       shape: "custom-node", // 节点形状
+    //       data: {
+    //         // id: "",
+    //         name: label, //用于数据传递的label
+    //         diagramId: this.diagramId,
+    //         modelId: this.modelId,
+    //         parameters: "",
+    //         inputs: "",
+    //         outputs: "",
+    //         scripts: "",
+    //         signals: "",
+    //         properties: {
+    //           category: type,
+    //         },
+    //         // label: label,
+    //       },
+    //       attrs: {
+    //         image: {
+    //           "xlink:href": icon,
+    //         },
+    //         label: {
+    //           text: label, // 页面上真正显示的标签
+    //         },
+    //       },ad
+    //     });
+    //   }
+    // },
+    addNode({ shape, label, type, icon, x, y }) {
       const { left, top, right, bottom } = document
         .getElementById("draw-cot")
         .getBoundingClientRect();
+
       if (x > left && x < right && y > top && y < bottom) {
         const localPosition = this.graph.pageToLocal(x, y); // 转换成相对坐标
-        this.graph.addNode({
-          label: label,
-          x: localPosition.x,
-          y: localPosition.y,
-          shape: "custom-node", // 节点形状
-          data: {
-            // id: "",
-            name: label, //用于数据传递的label
-            diagramId: this.diagramId,
-            modelId: this.modelId,
-            parameters: "",
-            inputs: "",
-            outputs: "",
-            scripts: "",
-            signals: "",
-            properties: {
-              category: type,
-            },
-            // label: label,
-          },
-          attrs: {
-            image: {
-              "xlink:href": icon,
-            },
-            label: {
-              text: label, // 页面上真正显示的标签
-            },
-          },
-        });
+
+        // 1. 处理水平直线
+        if (shape === "straight-line-horizontal") {
+          this.addHorizontalLine(localPosition);
+          return;
+        }
+
+        // 2. 处理垂直直线
+        if (shape === "straight-line-vertical") {
+          this.addVerticalLine(localPosition);
+          return;
+        }
+
+        // 3. 处理其他基础组件
+        if (["rect", "circle", "ellipse", "polygon"].includes(shape)) {
+          this.addBasicNode(localPosition, shape, label);
+          return;
+        }
+
+        // 4. 默认通用组件逻辑
+        this.addCustomNode(localPosition, label, type, icon);
       }
+    },
+
+    addHorizontalLine(position) {
+      this.graph.addNode({
+        shape: "path",
+        x: position.x,
+        y: position.y,
+        width: 400, // 固定长度
+        height: 10, // 直线高度
+        attrs: {
+          body: {
+            d: "M 0 5 L 400 5", // 水平直线，长度固定为 400
+            stroke: "#333",
+            strokeWidth: 2,
+          },
+        },
+        ports: {
+          groups: {
+            line: {
+              position: "absolute",
+              attrs: {
+                circle: {
+                  r: 4, // 连接点半径
+                  magnet: true, // 允许拖拽连接
+                  stroke: "#000",
+                  fill: "#FFF",
+                  strokeWidth: 1,
+                },
+              },
+            },
+          },
+          items: [
+            { id: "port-left", group: "line", args: { x: 0, y: 5 } }, // 左端
+            { id: "port-middle-1", group: "line", args: { x: 100, y: 5 } }, // 1/4 处
+            { id: "port-middle-2", group: "line", args: { x: 200, y: 5 } }, // 中点
+            { id: "port-middle-3", group: "line", args: { x: 300, y: 5 } }, // 3/4 处
+            { id: "port-right", group: "line", args: { x: 400, y: 5 } }, // 右端
+          ],
+        },
+      });
+    },
+
+    addVerticalLine(position) {
+      this.graph.addNode({
+        shape: "path",
+        x: position.x,
+        y: position.y,
+        width: 10, // 直线宽度
+        height: 400, // 固定长度
+        attrs: {
+          body: {
+            d: "M 5 0 L 5 400", // 垂直直线，长度固定为 400
+            stroke: "#333",
+            strokeWidth: 2,
+          },
+        },
+        ports: {
+          groups: {
+            line: {
+              position: "absolute",
+              attrs: {
+                circle: {
+                  r: 4, // 连接点半径
+                  magnet: true, // 允许拖拽连接
+                  stroke: "#000",
+                  fill: "#FFF",
+                  strokeWidth: 1,
+                },
+              },
+            },
+          },
+          items: [
+            { id: "port-top", group: "line", args: { x: 5, y: 0 } }, // 顶端
+            { id: "port-middle-1", group: "line", args: { x: 5, y: 100 } }, // 1/4 处
+            { id: "port-middle-2", group: "line", args: { x: 5, y: 200 } }, // 中点
+            { id: "port-middle-3", group: "line", args: { x: 5, y: 300 } }, // 3/4 处
+            { id: "port-bottom", group: "line", args: { x: 5, y: 400 } }, // 底端
+          ],
+        },
+      });
+    },
+
+    addBasicNode(position, shape, label) {
+      this.graph.addNode({
+        shape,
+        x: position.x,
+        y: position.y,
+        width: shape === "circle" ? 80 : 100,
+        height: shape === "circle" ? 80 : 60,
+        label: label || "基础组件",
+        attrs: {
+          body: {
+            fill: "#EFEFEF",
+            stroke: "#333",
+            strokeWidth: 2,
+          },
+          label: {
+            text: label || "基础组件",
+            fontSize: 14,
+            fill: "#000",
+          },
+        },
+        ports: {
+          groups: {
+            top: {
+              position: "top",
+              attrs: {
+                circle: {
+                  r: 4,
+                  magnet: true,
+                  stroke: "#000",
+                  strokeWidth: 1,
+                  fill: "#FFF",
+                },
+              },
+            },
+            right: {
+              position: "right",
+              attrs: {
+                circle: {
+                  r: 4,
+                  magnet: true,
+                  stroke: "#000",
+                  strokeWidth: 1,
+                  fill: "#FFF",
+                },
+              },
+            },
+            bottom: {
+              position: "bottom",
+              attrs: {
+                circle: {
+                  r: 4,
+                  magnet: true,
+                  stroke: "#000",
+                  strokeWidth: 1,
+                  fill: "#FFF",
+                },
+              },
+            },
+            left: {
+              position: "left",
+              attrs: {
+                circle: {
+                  r: 4,
+                  magnet: true,
+                  stroke: "#000",
+                  strokeWidth: 1,
+                  fill: "#FFF",
+                },
+              },
+            },
+          },
+          items: [
+            { id: "port-top", group: "top" },
+            { id: "port-right", group: "right" },
+            { id: "port-bottom", group: "bottom" },
+            { id: "port-left", group: "left" },
+          ],
+        },
+      });
+    },
+
+    addCustomNode(position, label, type, icon) {
+      this.graph.addNode({
+        shape: "custom-node",
+        x: position.x,
+        y: position.y,
+        label: label || "通用组件",
+        data: {
+          name: label,
+          diagramId: this.diagramId,
+          modelId: this.modelId,
+          parameters: "",
+          inputs: "",
+          outputs: "",
+          scripts: "",
+          signals: "",
+          properties: {
+            category: type,
+          },
+        },
+        attrs: {
+          image: {
+            "xlink:href": icon,
+          },
+          label: {
+            text: label || "通用组件",
+          },
+        },
+      });
     },
 
     async handleSubmit(nodeData) {

@@ -39,40 +39,62 @@
 </template>
 
 <script>
-// const mouseXY = { x: null, y: null };
-// import config from "./config";
-// import api from "@/api";
-
-// import api from "@/api.js";
-
 export default {
   name: "DrawerCom",
-  // props: {
-  //   drawCot: {
-  //     type: Object,
-  //     required: true,
-  //   },
-  // },
   data() {
     return {
-      visible: true, // 控制抽屉是否可见
-      direction: "ltr", // 抽屉的滑动方向
-      showMore: false, // 控制是否显示组件列表
+      visible: true,
+      direction: "ltr",
+      showMore: false,
+      // 配置组件列表，添加 AntV X6 的基础组件到第一个分类
       configList: [
+        // 基础组件分类
+        {
+          label: "矩形",
+          type: "基础组件",
+          shape: "rect",
+          icon: require("@/assets/svg/rect.svg"),
+        },
+        {
+          label: "圆形",
+          type: "基础组件",
+          shape: "circle",
+          icon: require("@/assets/svg/circle.svg"),
+        },
+        {
+          label: "椭圆",
+          type: "基础组件",
+          shape: "ellipse",
+          icon: require("@/assets/svg/ellipse.svg"),
+        },
+        {
+          label: "总线（水平）",
+          type: "基础组件",
+          shape: "straight-line-horizontal",
+          icon: require("@/assets/svg/straight-line.svg"),
+        },
+        {
+          label: "总线（竖直）",
+          type: "基础组件",
+          shape: "straight-line-vertical",
+          icon: require("@/assets/svg/straight-line.svg"),
+        },
+        // { label: "图片", type: "基础组件", shape: "image", icon: "" },
+        // 其他分类组件
         {
           label: "光伏",
           type: "控制单元",
-          icon: "https://i.imgur.com/or1EZsz.jpg",
+          icon: require("@/assets/svg/guangfu.svg"),
         },
         {
           label: "生成器",
           type: "处理单元",
-          icon: "https://i.imgur.com/4xBTxfw.jpg",
+          icon: require("@/assets/svg/generator.svg"),
         },
         {
           label: "控制器",
           type: "信号单元",
-          icon: "https://i.imgur.com/hddYTc6.jpg",
+          icon: require("@/assets/svg/controller.svg"),
         },
       ],
       categorizedComponents: {}, // 分类后的组件列表
@@ -104,6 +126,7 @@ export default {
       // Emit 绝对坐标
       const { x, y } = { x: event.clientX, y: event.clientY };
       this.$emit("addNode", {
+        shape: item.shape,
         icon: item.icon,
         label: item.label,
         type: item.type,
