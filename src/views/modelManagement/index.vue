@@ -31,6 +31,12 @@
     <el-table :data="modelData" class="model-table">
       <el-table-column prop="name" label="模型名" sortable></el-table-column>
       <!-- 使用 el-tooltip 包裹 modelDescription -->
+      <el-table-column prop="type" label="模型类别" sortable></el-table-column>
+      <el-table-column
+        prop="categoryId"
+        label="模型目录"
+        sortable
+      ></el-table-column>
       <el-table-column label="模型说明">
         <template v-slot="scope">
           <el-tooltip
@@ -46,12 +52,6 @@
           </el-tooltip>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="模型类别" sortable></el-table-column>
-      <el-table-column
-        prop="categoryId"
-        label="模型目录"
-        sortable
-      ></el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-link @click="editModel(scope.row)">编辑</el-link>

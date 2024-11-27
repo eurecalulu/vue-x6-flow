@@ -16,7 +16,9 @@
         align-items: center;
       "
     >
-      综合能源EMS能碳云智能优化调控平台
+      <div>
+        {{ modelName }} - 综合能源EMS能碳云数模智能仿真与优化控制管理平台
+      </div>
     </el-header>
 
     <el-container>
@@ -25,7 +27,7 @@
         width="280px"
         style="background-color: #f7f7f7; border-right: 0.2px solid #ddd"
       >
-        <Drawer @addNode="addNode" />
+        <Drawer @addNode="addNode" :modelId="this.modelId" />
       </el-aside>
 
       <!-- 主内容区 -->
@@ -159,10 +161,12 @@ export default {
       },
       graphProperties: {},
       autoSaveInterval: null,
+      modelName: "", // 模型名称
     };
   },
   props: ["diagramId", "modelId"],
   mounted() {
+    this.fetchModelName();
     // 初始化 graph
     this.initGraph();
     // 按钮绑定，绑定键盘快捷键
@@ -184,6 +188,16 @@ export default {
   },
   methods: {
     // 根据 diagramID 从后端获取图表数据
+    async fetchModelName() {
+      try {
+        // 模拟接口请求获取模型名称
+        const response = await api.queryModel(this.modelId); // 假设接口为 getModelById
+        this.modelName = response.data?.data?.name || "未知模型";
+      } catch (error) {
+        console.error("获取模型名称失败：", error);
+        this.modelName = "未知模型";
+      }
+    },
     async loadGraphData() {
       try {
         const response = await api.queryDiagram(this.diagramId); // 假设你的接口是 getDiagramData
@@ -427,7 +441,7 @@ export default {
         },
         container: document.getElementById("draw-cot"),
         panning: {
-          enabled: false,
+          enabled: true,
           eventTypes: ["leftMouseDown", "mouseWheel"],
         },
         mousewheel: {
@@ -591,6 +605,13 @@ export default {
         const nodeId = node.id; // 获取节点的 ID
         this.handleNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
       });
+
+      // graph.use(
+      //   new Transform({
+      //     resizing: true,
+      //     rotating: true,
+      //   })
+      // );
 
       // graph.use(
       //   new Transform({

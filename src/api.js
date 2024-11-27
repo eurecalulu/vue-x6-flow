@@ -116,19 +116,19 @@ export default {
 
   // === Icon APIs ===
   addIcon(data) {
-    return apiClient.post("/simgui/Icon/add", data);
+    return apiClient.post("/simgui/icon/add", data);
   },
   updateIcon(data) {
-    return apiClient.post("/simgui/Icon/update", data);
+    return apiClient.post("/simgui/icon/update", data);
   },
   deleteIcon(iconId) {
-    return apiClient.post(`/simgui/Icon/delete/${iconId}`);
+    return apiClient.post(`/simgui/icon/delete/${iconId}`);
   },
   queryIcon(iconId) {
-    return apiClient.post(`/simgui/Icon/query/${iconId}`);
+    return apiClient.post(`/simgui/icon/query/${iconId}`);
   },
   queryIconList() {
-    return apiClient.post("/simgui/Icon/queryList");
+    return apiClient.post("/simgui/icon/queryList");
   },
 
   // === Project APIs ===

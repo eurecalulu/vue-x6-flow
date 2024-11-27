@@ -16,7 +16,7 @@
         align-items: center;
       "
     >
-      综合能源EMS能碳云智能优化调控平台
+      综合能源EMS能碳云数模智能仿真与优化控制管理平台
     </el-header>
 
     <!-- Layout -->

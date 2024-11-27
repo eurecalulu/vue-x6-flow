@@ -25,7 +25,7 @@
               @dragend="dragend(item, $event)"
             >
               <img
-                :src="item.icon || '@/assets/svg/defaultImg.svg'"
+                :src="resolveIconUrl(item.icon)"
                 alt=""
                 class="component-icon"
               />
@@ -39,8 +39,15 @@
 </template>
 
 <script>
+import api from "@/api"; // 导入 API 模块
 export default {
   name: "DrawerCom",
+  props: {
+    modelId: {
+      type: String,
+      required: true, // 指定 modelId 是必需的
+    },
+  },
   data() {
     return {
       visible: true,
@@ -52,59 +59,48 @@ export default {
         {
           label: "矩形",
           type: "基础组件",
+          categoryId: "基础组件",
           shape: "rect",
           icon: require("@/assets/svg/rect.svg"),
         },
         {
           label: "圆形",
           type: "基础组件",
+          categoryId: "基础组件",
           shape: "circle",
           icon: require("@/assets/svg/circle.svg"),
         },
         {
           label: "椭圆",
           type: "基础组件",
+          categoryId: "基础组件",
           shape: "ellipse",
           icon: require("@/assets/svg/ellipse.svg"),
         },
         {
           label: "总线（水平）",
           type: "基础组件",
+          categoryId: "基础组件",
           shape: "straight-line-horizontal",
           icon: require("@/assets/svg/straight-line.svg"),
         },
         {
           label: "总线（竖直）",
           type: "基础组件",
+          categoryId: "基础组件",
           shape: "straight-line-vertical",
           icon: require("@/assets/svg/straight-line.svg"),
-        },
-        // { label: "图片", type: "基础组件", shape: "image", icon: "" },
-        // 其他分类组件
-        {
-          label: "光伏",
-          type: "控制单元",
-          icon: require("@/assets/svg/guangfu.svg"),
-        },
-        {
-          label: "生成器",
-          type: "处理单元",
-          icon: require("@/assets/svg/generator.svg"),
-        },
-        {
-          label: "控制器",
-          type: "信号单元",
-          icon: require("@/assets/svg/controller.svg"),
         },
       ],
       categorizedComponents: {}, // 分类后的组件列表
       categoryState: {},
+      iconCache: {},
     };
   },
   created() {
-    // this.fetchComponentList();
-    this.categorizeComponents(this.configList);
-    this.initializeCategoryState();
+    this.fetchComponentList();
+    // this.categorizeComponents(this.configList);
+    // this.initializeCategoryState();
   },
   methods: {
     drag: function () {
@@ -134,27 +130,82 @@ export default {
         y,
       });
     },
-    // fetchComponentList() {
-    //   api
-    //     .queryComponentList()
-    //     .then((response) => {
-    //       if (response.data.status === 200) {
-    //         // 假设组件列表数据在 response.data.data 中
-    //         this.configList = response.data.data;
-    //         console.log(this.configList);
-    //         this.categorizeComponents();
-    //       } else {
-    //         console.error("获取组件列表失败：", response.data.message);
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.error("请求错误：", error);
-    //     });
-    // },
+    async fetchComponentList() {
+      if (!this.modelId) {
+        console.error("modelId 未定义！");
+        return;
+      }
+      try {
+        const data = {
+          currentPage: 1,
+          pageSize: -1,
+          searchKey: "",
+          // selectedType: this.selectedType,
+        };
+        // 假设接口返回所有模型
+        const response = await api.queryModelList(data); // 获取模型列表
+        const models = response.data.data;
+
+        // 去除当前模型（假设你有当前模型 ID）
+        const currentModelId = this.modelId; // 假设从路由获取当前模型 ID
+        const filteredModels = models.filter(
+          (model) => model.id !== currentModelId
+        );
+
+        // console.log("Filtered Models:", filteredModels);
+
+        // 批量请求图标数据
+        const iconIds = filteredModels
+          .map((model) => model.iconId)
+          .filter(Boolean); // 获取所有 iconId
+
+        // 批量请求图标数据，缓存命中则跳过
+        const uncachedIconIds = iconIds.filter((id) => !this.iconCache[id]);
+        const iconResponses = await Promise.all(
+          uncachedIconIds.map((id) => api.queryIcon(id))
+        );
+        iconResponses.forEach((res, index) => {
+          const iconData = res.data?.data?.data; // 提取 Base64 数据
+          if (iconData) {
+            this.iconCache[uncachedIconIds[index]] = iconData; // 缓存图标数据
+          }
+        });
+
+        // console.log("Updated Icon Cache:", this.iconCache);
+
+        // 格式化模型数据
+        this.modelList = filteredModels.map((model) => ({
+          label: model.name,
+          type: model.type || "未分类",
+          categoryId: model.categoryId || "未分组",
+          icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
+          shape: "custom-model",
+        }));
+
+        // 格式化模型数据
+        this.modelList = filteredModels.map((model) => ({
+          label: model.name,
+          type: model.type || "未分类",
+          categoryId: model.categoryId || "未分组",
+          icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
+          shape: "custom-model",
+        }));
+
+        // console.log("Model List with Icons:", this.modelList);
+
+        // 将模型合并到 `configList` 中
+        this.configList = [...this.configList, ...this.modelList];
+        this.categorizeComponents(this.configList);
+        this.initializeCategoryState();
+        // console.log("Final Config List:", this.configList);
+      } catch (error) {
+        console.error("获取模型列表失败：", error);
+      }
+    },
     categorizeComponents(components) {
       const categorized = {};
       components.forEach((component) => {
-        const type = component.type || "未分类";
+        const type = component.categoryId || "未分组";
         if (!categorized[type]) {
           categorized[type] = [];
         }
@@ -173,6 +224,18 @@ export default {
     },
     isCategoryOpen(category) {
       return this.categoryState[category];
+    },
+    resolveIconUrl(icon) {
+      if (icon.startsWith("data:image")) {
+        // Base64 格式的图标，直接返回
+        return icon;
+      }
+      if (icon.startsWith("/") || icon.startsWith("http")) {
+        // URL 格式的图标，直接返回
+        return icon;
+      }
+      // 否则，返回默认图标路径
+      return "/img/default-icon.svg";
     },
   },
 };
