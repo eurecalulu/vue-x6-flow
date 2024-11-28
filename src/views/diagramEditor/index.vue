@@ -150,9 +150,9 @@ export default {
         name: "生成器",
         label: "生成器",
         type: "控制组件",
-        parameters: "额定功率",
-        inputs: "Real P",
-        outputs: "Real Heat",
+        parameters: [],
+        inputs: [],
+        outputs: [],
         scripts: "der(kWh) = P",
         properties: {
           fillColor: "#f5f5f5",

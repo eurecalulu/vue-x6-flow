@@ -21,7 +21,15 @@
           <div style="margin-bottom: 15%">
             <h3>节点基础属性</h3>
             <el-form-item label="节点 ID" class="form-item">
-              <el-input v-model="localNodeData.id" :disabled="true"></el-input>
+              <el-tooltip
+                :content="'完整ID: ' + localNodeData.id"
+                placement="top"
+              >
+                <el-input
+                  v-model="localNodeData.id"
+                  :disabled="true"
+                ></el-input>
+              </el-tooltip>
             </el-form-item>
             <el-form-item label="节点标签" class="form-item">
               <el-input v-model="localNodeData.name"></el-input>
@@ -39,52 +47,56 @@
             <!--              ></el-input-number>-->
             <!--            </el-form-item>-->
           </div>
-          <!-- 业务属性（仅在 type 为 'generator' 时显示） -->
           <div>
             <h3>业务属性</h3>
-            <!--            <el-form-item label="参数" class="form-item">-->
-            <!--              <el-input-->
-            <!--                v-model="localNodeData.parameters"-->
-            <!--                placeholder="Parameter Real Un 额定功率"-->
-            <!--              ></el-input>-->
-            <!--            </el-form-item>-->
-            <!--            <el-form-item label="输入" class="form-item">-->
-            <!--              <el-input-->
-            <!--                v-model="localNodeData.inputs"-->
-            <!--                placeholder="Real P"-->
-            <!--              ></el-input>-->
-            <!--            </el-form-item>-->
-            <!--            <el-form-item label="输出" class="form-item">-->
-            <!--              <el-input-->
-            <!--                v-model="localNodeData.outputs"-->
-            <!--                placeholder="Real Heat"-->
-            <!--              ></el-input>-->
-            <!--            </el-form-item>-->
-            <!--            <el-form-item label="脚本" class="form-item">-->
-            <!--              <el-input-->
-            <!--                type="textarea"-->
-            <!--                :rows="3"-->
-            <!--                v-model="localNodeData.scripts"-->
-            <!--                placeholder="der(kWh) = P"-->
-            <!--              ></el-input>-->
-            <!--            </el-form-item>-->
+            <div
+              v-if="
+                category === '处理单元' ||
+                category === '信号单元' ||
+                category === '控制单元'
+              "
+            >
+              <el-form-item label="参数配置" class="form-item">
+                <el-button
+                  class="detail-parameter-custom-button"
+                  size="small"
+                  icon="el-icon-edit"
+                  @click="openParametersConfig"
+                >
+                  配置
+                </el-button>
+              </el-form-item>
+              <!-- 输入参数配置 -->
+              <el-form-item label="输入参数" class="form-item">
+                <el-button
+                  class="detail-parameter-custom-button"
+                  size="small"
+                  icon="el-icon-edit"
+                  @click="openInputParameterConfig"
+                >
+                  配置
+                </el-button>
+              </el-form-item>
+              <!-- 输出参数配置 -->
+              <el-form-item label="输出参数" class="form-item">
+                <el-button
+                  class="detail-parameter-custom-button"
+                  size="small"
+                  icon="el-icon-edit"
+                  @click="openOutputParameterConfig"
+                >
+                  配置
+                </el-button>
+              </el-form-item>
+            </div>
+
             <div v-if="category === '处理单元'">
               <el-form-item label="参数" class="form-item">
                 <el-input
+                  type="textarea"
+                  :rows="3"
                   v-model="localNodeData.parameters"
                   placeholder="Parameter Real Un 额定功率"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="输入" class="form-item">
-                <el-input
-                  v-model="localNodeData.inputs"
-                  placeholder="Real P"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="输出" class="form-item">
-                <el-input
-                  v-model="localNodeData.outputs"
-                  placeholder="Real Heat"
                 ></el-input>
               </el-form-item>
               <el-form-item label="脚本" class="form-item">
@@ -99,24 +111,6 @@
 
             <!-- 如果 category 为 '信号单元' -->
             <div v-else-if="category === '信号单元'">
-              <el-form-item label="参数" class="form-item">
-                <el-input
-                  v-model="localNodeData.parameters"
-                  placeholder="Parameter Real DBName '数据库名'"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="输入" class="form-item">
-                <el-input
-                  v-model="localNodeData.inputs"
-                  placeholder="无"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="输出" class="form-item">
-                <el-input
-                  v-model="localNodeData.outputs"
-                  placeholder="Real Temperature, Moisture"
-                ></el-input>
-              </el-form-item>
               <el-form-item label="脚本" class="form-item">
                 <el-input
                   type="textarea"
@@ -128,29 +122,11 @@
             </div>
 
             <div v-else-if="category === '控制单元'">
-              <el-form-item label="参数" class="form-item">
-                <el-input
-                  v-model="localNodeData.parameters"
-                  placeholder="Parameter Real DBName '数据库名'"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="输入" class="form-item">
-                <el-input
-                  v-model="localNodeData.inputs"
-                  placeholder="无"
-                ></el-input>
-              </el-form-item>
-              <el-form-item label="输出" class="form-item">
-                <el-input
-                  v-model="localNodeData.outputs"
-                  placeholder="Real Temperature,Moisture"
-                ></el-input>
-              </el-form-item>
               <el-form-item label="信号绑定" class="form-item">
                 <el-input
                   type="textarea"
                   :rows="3"
-                  v-model="localNodeData.parameters"
+                  v-model="localNodeData.signals"
                   :placeholder="`设备号：11111
 温度信号：temp
 XX信号：XXX`"
@@ -173,12 +149,40 @@ XX信号：XXX`"
         </el-form>
       </div>
     </div>
+    <!-- 输入参数配置弹窗 -->
+    <ParameterConfigModal
+      :visible="isParametersConfigVisible"
+      :parameters="localNodeData.parameters"
+      type="parameter"
+      @close="isInputParameterConfigVisible = false"
+      @update="updateInputParameters"
+    />
+
+    <!-- 参数配置弹窗 -->
+    <ParameterConfigModal
+      :visible="isInputParameterConfigVisible"
+      :parameters="localNodeData.inputs"
+      type="input"
+      @close="isInputParameterConfigVisible = false"
+      @update="updateInputParameters"
+    />
+
+    <!-- 输出参数配置弹窗 -->
+    <ParameterConfigModal
+      :visible="isOutputParameterConfigVisible"
+      :parameters="localNodeData.outputs"
+      type="output"
+      @close="isOutputParameterConfigVisible = false"
+      @update="updateOutputParameters"
+    />
   </el-drawer>
 </template>
 
 <script>
+import ParameterConfigModal from "./ParameterConfigModal.vue";
 export default {
   name: "NodeDetailsModal",
+  components: { ParameterConfigModal },
   props: {
     visible: {
       type: Boolean,
@@ -192,6 +196,9 @@ export default {
   data() {
     return {
       localNodeData: this.nodeData, // 深拷贝，防止修改 props
+      isParametersConfigVisible: false, // 控制参数配置弹窗的显示
+      isInputParameterConfigVisible: false, // 控制输入参数配置弹窗的显示
+      isOutputParameterConfigVisible: false, // 控制输出参数配置弹窗的显示
       rules: {},
     };
   },
@@ -219,6 +226,24 @@ export default {
       this.$emit("submit", this.localNodeData); // 通过 $emit 发送数据给父组件
       this.handleClose(); // 关闭抽屉
     },
+    openParametersConfig() {
+      this.isParametersConfigVisible = true;
+    },
+    updateParameters(newParameters) {
+      this.localNodeData.parameters = newParameters; // 更新参数数据
+    },
+    openInputParameterConfig() {
+      this.isInputParameterConfigVisible = true;
+    },
+    updateInputParameters(newParameters) {
+      this.localNodeData.inputs = newParameters; // 更新输入参数数据
+    },
+    openOutputParameterConfig() {
+      this.isOutputParameterConfigVisible = true;
+    },
+    updateOutputParameters(newParameters) {
+      this.localNodeData.outputs = newParameters; // 更新输出参数数据
+    },
   },
 };
 </script>
@@ -227,6 +252,15 @@ export default {
 .node-details-drawer {
   box-shadow: -2px 0px 8px rgba(0, 0, 0, 0.1);
   overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+.detail-parameter-custom-button {
+  background-color: #4a4a4a !important; /* 按钮背景颜色 */
+  color: #ffffff !important; /* 按钮文字颜色 */
+  border: none !important; /* 移除边框 */
+}
+.detail-parameter-custom-button:hover {
+  background-color: #3a3a3a !important; /* 悬停时的背景颜色 */
 }
 
 /* 按钮样式 */
