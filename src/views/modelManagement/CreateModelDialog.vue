@@ -48,13 +48,6 @@
           </div>
         </div>
       </el-form-item>
-      <!--      <el-form-item label="图标" prop="iconId">-->
-      <!--        <el-button type="primary" @click="openIconCenter"> 选择图标 </el-button>-->
-      <!--        <div v-if="form.iconId" class="icon-preview">-->
-      <!--          <img :src="selectedIcon.url" alt="已选图标" class="selected-icon" />-->
-      <!--          <span>{{ selectedIcon.name }}</span>-->
-      <!--        </div>-->
-      <!--      </el-form-item>-->
       <el-form-item label="模型描述" prop="modelDescription">
         <el-input
           type="textarea"

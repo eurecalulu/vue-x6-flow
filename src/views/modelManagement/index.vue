@@ -5,16 +5,6 @@
       <el-col :span="6">
         <el-input v-model="modelSearchQuery" placeholder="模型搜索"></el-input>
       </el-col>
-      <!--      <el-col :span="4">-->
-      <!--        <el-select v-model="selectedType" placeholder="模型类别">-->
-      <!--          <el-option-->
-      <!--            v-for="item in modelCategories"-->
-      <!--            :key="item.value"-->
-      <!--            :label="item.label"-->
-      <!--            :value="item.value"-->
-      <!--          ></el-option>-->
-      <!--        </el-select>-->
-      <!--      </el-col>-->
       <el-col :span="2">
         <el-button class="gray-button" type="primary" @click="handleSearch"
           >搜索</el-button
@@ -100,13 +90,6 @@ export default {
     return {
       modelSearchQuery: "",
       // selectedType: "",
-      modelCategories: [
-        { value: "air-conditioning", label: "空调机理模型" },
-        { value: "energy-storage", label: "储能机理模型" },
-        { value: "solar", label: "太阳能模型" },
-        { value: "wind-power", label: "风力发电模型" },
-        { value: "water-conservation", label: "水利模型" },
-      ],
       modelData: [
         {
           name: "大金空调机理模型",
@@ -178,44 +161,8 @@ export default {
   },
   methods: {
     handleSearch() {
-      // console.log(
-      //   "搜索内容：",
-      //   this.modelSearchQuery,
-      //   "模型类别：",
-      //   this.selectedCategory
-      // );
       this.fetchModelList();
     },
-    // async handleCreateOrUpdateModel(form) {
-    //   try {
-    //     if (form.id) {
-    //       // 更新模型
-    //       const response = await api.updateModel(form);
-    //       if (response.data.status === 200) {
-    //         this.$message.success("更新模型成功");
-    //       }
-    //     } else {
-    //       // 创建 diagram，并将其关联到新模型
-    //       const diagramResponse = await this.addDiagram({ name: form.name });
-    //       const diagramId = diagramResponse.data.id;
-    //       // 新建模型
-    //       // 新建模型并包含 diagramId
-    //       const modelData = {
-    //         ...form,
-    //         diagramId, // 将生成的 diagramId 作为模型的属性
-    //       };
-    //
-    //       const response = await api.addModel(modelData);
-    //       if (response.data.status === 200) {
-    //         this.$message.success("新建模型成功");
-    //       }
-    //     }
-    //     this.fetchModelList();
-    //   } catch (error) {
-    //     this.$message.error("操作失败，请重试");
-    //   }
-    //   this.closeCreateModal();
-    // },
 
     async handleCreateOrUpdateModel(form) {
       try {

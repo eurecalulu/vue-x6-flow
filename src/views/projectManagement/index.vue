@@ -3,35 +3,46 @@
     <!-- 搜索栏 -->
     <el-row :gutter="20" class="search-bar">
       <el-col :span="6">
-        <el-input v-model="searchQuery" placeholder="工程搜索"></el-input>
+        <el-input v-model="searchKey" placeholder="项目搜索"></el-input>
       </el-col>
       <el-col :span="2">
         <el-button class="gray-button" type="primary" @click="handleSearch"
           >搜索</el-button
         >
       </el-col>
-      <el-col :span="4" :offset="10" class="create-project">
-        <el-button class="gray-button" type="success" @click="createProject"
+      <el-col :span="4" :offset="8" class="create-project">
+        <el-button class="gray-button" type="success" @click="openCreateModal"
           >新建项目</el-button
         >
       </el-col>
     </el-row>
-
-    <!-- 表格 -->
-    <el-table :data="tableData" class="project-table">
-      <el-table-column prop="projectName" label="工程名"></el-table-column>
-      <el-table-column prop="description" label="项目说明"></el-table-column>
-      <el-table-column prop="gateway" label="绑定网关机">
-        <template slot-scope="scope">
-          <span v-if="scope.row.gateway">{{ scope.row.gateway }}</span>
-          <span v-else>未绑定</span>
+    <el-table :data="projectList" class="project-table">
+      <el-table-column label="项目名称" prop="name" />
+      <el-table-column label="项目说明" width="200">
+        <template v-slot="scope">
+          <el-tooltip
+            class="item"
+            effect="dark"
+            :content="scope.row.properties?.projectDescription || '暂无描述'"
+            placement="top"
+            :popper-class="'custom-tooltip'"
+          >
+            <span class="truncate-text">{{
+              scope.row.properties?.projectDescription || "暂无描述"
+            }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
+      <el-table-column label="绑定网关" prop="gatewayId" width="180" />
       <el-table-column label="操作">
         <template slot-scope="scope">
+          <el-link @click="editProperties(scope.row)">属性</el-link>
+          <el-divider direction="vertical"></el-divider>
           <el-link @click="editProject(scope.row)">编辑</el-link>
           <el-divider direction="vertical"></el-divider>
-          <el-link @click="downloadDocument(scope.row)">策略文件下载</el-link>
+          <el-link @click="openDiagramEditor(scope.row)">仿真</el-link>
+          <el-divider direction="vertical"></el-divider>
+          <el-link @click="exportStrategy(scope.row)">策略下发</el-link>
           <el-divider direction="vertical"></el-divider>
           <el-link
             class="low-saturation-danger"
@@ -42,7 +53,6 @@
       </el-table-column>
     </el-table>
 
-    <!-- 分页 -->
     <el-pagination
       background
       layout="prev, pager, next"
@@ -51,74 +61,165 @@
       @current-change="handlePageChange"
       class="dark-pagination"
     ></el-pagination>
+
+    <!-- 使用 CreateProjectDialog 组件 -->
+    <CreateProjectDialog
+      :isVisible="isCreateModalVisible"
+      :projectData="currentProject"
+      @close="closeCreateModal"
+      @submit="handleCreateOrUpdateProject"
+    />
   </div>
 </template>
 
 <script>
+import api from "@/api"; // 导入 API 模块
+import CreateProjectDialog from "./CreateProjectDialog.vue"; // 引入 CreateProjectDialog 组件
+
 export default {
   name: "ProjectManagementIndex",
+  components: {
+    CreateProjectDialog,
+  },
   data() {
     return {
-      searchQuery: "",
-      tableData: [
-        {
-          projectName: "北湖街道工程",
-          description: "综合优化",
-          gateway: "北湖街道网关机1",
-        },
-        {
-          projectName: "北湖街道工程",
-          description: "负荷预测",
-          gateway: "",
-        },
-        {
-          projectName: "南湖街道工程",
-          description: "线路修复",
-          gateway: "南湖街道网关机2",
-        },
-        {
-          projectName: "东风路项目",
-          description: "设备维护",
-          gateway: "东风路网关机3",
-        },
-        {
-          projectName: "西山路工程",
-          description: "数据监控",
-          gateway: "西山路网关机4",
-        },
-        {
-          projectName: "中央广场项目",
-          description: "智能化改造",
-          gateway: "中央广场网关机5",
-        },
-        {
-          projectName: "环城大道工程",
-          description: "负荷预测",
-          gateway: "",
-        },
-      ],
-      total: 7,
+      searchKey: "", // 搜索关键字
+      projectList: [], // 项目列表
+      isCreateModalVisible: false,
+      total: 8,
       pageSize: 8,
+      currentPage: 1,
+      currentProject: null,
     };
   },
+  mounted() {
+    this.fetchProjectList();
+  },
   methods: {
+    editProperties(data) {
+      console.log(data);
+    },
+    exportStrategy(data) {
+      console.log(data);
+    },
     handleSearch() {
-      console.log("搜索内容：", this.searchQuery);
+      this.fetchModelList();
     },
-    createProject() {
-      console.log("新建项目");
+    async handleCreateOrUpdateProject(form) {
+      try {
+        if (form.id) {
+          // 更新模型
+          await this.updateProject(form);
+        } else {
+          // 创建 diagram，并将其关联到新模型
+          const diagramId = await this.createDiagram(form.name);
+          // 新建模型并包含 diagramId
+          await this.createProject({ ...form, diagramId });
+        }
+        this.fetchProjectList();
+      } catch (error) {
+        this.$message.error(`操作失败：${error.message}`);
+      } finally {
+        this.closeCreateModal();
+      }
     },
-    editProject(row) {
-      console.log("编辑项目：", row.projectName);
+
+    async updateProject(form) {
+      try {
+        const response = await api.updateProject(form);
+        if (response.data.status === 200) {
+          this.$message.success("更新项目成功");
+        } else {
+          throw new Error("更新项目失败");
+        }
+      } catch (error) {
+        throw new Error(`更新项目请求失败：${error.message}`);
+      }
     },
-    downloadDocument(row) {
-      console.log("下载策略文件：", row.projectName);
+
+    async createDiagram(name) {
+      try {
+        const response = await api.addDiagram({ name });
+        if (response.data.status === 201) {
+          return response.data.data.id; // 返回 diagramId
+        } else {
+          throw new Error("创建 Diagram 失败");
+        }
+      } catch (error) {
+        throw new Error(`创建 Diagram 请求失败：${error.message}`);
+      }
     },
-    deleteProject(row) {
-      console.log("删除项目：", row.projectName);
+
+    async createProject(modelData) {
+      try {
+        const response = await api.addProject(modelData);
+        if (response.data.status === 201) {
+          this.$message.success("新建项目成功");
+        } else {
+          throw new Error("新建项目失败");
+        }
+      } catch (error) {
+        throw new Error(`新建项目请求失败：${error.message}`);
+      }
+    },
+
+    async editProject(row) {
+      const response = await api.queryProject(row.id);
+      if (response.data.status === 200) {
+        this.currentProject = response.data.data;
+        this.isCreateModalVisible = true;
+      }
+    },
+    async deleteProject(row) {
+      try {
+        await this.$confirm("确认删除该项目吗？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        });
+        const response = await api.deleteProject(row.id);
+        if (response.data.status === 200) {
+          this.$message.success("删除项目成功");
+          this.fetchProjectList();
+        }
+      } catch (error) {
+        this.$message.error("删除项目失败");
+      }
+    },
+    async fetchProjectList() {
+      const data = {
+        currentPage: this.currentPage,
+        pageSize: this.pageSize,
+        searchKey: this.searchKey,
+      };
+      const response = await api.queryProjectPageList(data);
+      if (response.data.status === 200) {
+        this.projectList = response.data.data.records; // 确保传递给 ElTable 的数据是数组
+        this.total = response.data.data.total; // 设置总条目数用于分页
+      }
     },
     handlePageChange(page) {
-      console.log("当前页：", page);
+      this.currentPage = page;
+      this.fetchProjectList();
+    },
+    openCreateModal() {
+      this.currentProject = null;
+      this.isCreateModalVisible = true;
+    },
+    closeCreateModal() {
+      this.isCreateModalVisible = false;
+    },
+    exportPolicy() {
+      console.log("export model");
+    },
+    async openDiagramEditor(row) {
+      let diagramId = row.diagramId;
+      let modelId = row.id;
+      // 跳转到 Diagram 编辑页面，传递模型的 diagramId
+      await this.$router.push({
+        name: "DiagramEditor",
+        params: { diagramId, modelId },
+      });
     },
   },
 };
@@ -169,6 +270,11 @@ export default {
   color: #ffffff !important;
 }
 
+.el-tooltip {
+  font-size: 14px;
+}
+
+/* 饱和度更低的红色删除链接样式 */
 .low-saturation-danger {
   color: #8b0000 !important; /* 更柔和的红色 */
   transition: color 0.3s ease;
