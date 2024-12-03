@@ -131,10 +131,6 @@ export default {
       });
     },
     async fetchComponentList() {
-      if (!this.modelId) {
-        console.error("modelId 未定义！");
-        return;
-      }
       try {
         const data = {
           currentPage: 1,

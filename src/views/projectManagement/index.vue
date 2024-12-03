@@ -36,11 +36,11 @@
       <el-table-column label="绑定网关" prop="gatewayId" width="180" />
       <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-link @click="editProperties(scope.row)">属性</el-link>
-          <el-divider direction="vertical"></el-divider>
           <el-link @click="editProject(scope.row)">编辑</el-link>
           <el-divider direction="vertical"></el-divider>
-          <el-link @click="openDiagramEditor(scope.row)">仿真</el-link>
+          <el-link @click="openDiagramEditor(scope.row)">设计</el-link>
+          <el-divider direction="vertical"></el-divider>
+          <el-link @click="openSimulation(scope.row)">仿真</el-link>
           <el-divider direction="vertical"></el-divider>
           <el-link @click="exportStrategy(scope.row)">策略下发</el-link>
           <el-divider direction="vertical"></el-divider>
@@ -214,11 +214,20 @@ export default {
     },
     async openDiagramEditor(row) {
       let diagramId = row.diagramId;
-      let modelId = row.id;
+      let projectId = row.id;
       // 跳转到 Diagram 编辑页面，传递模型的 diagramId
       await this.$router.push({
         name: "DiagramEditor",
-        params: { diagramId, modelId },
+        params: { diagramId, projectId },
+      });
+    },
+    async openSimulation(row) {
+      let diagramId = row.diagramId;
+      let projectId = row.id;
+      // 跳转到 Diagram 编辑页面，传递模型的 diagramId
+      await this.$router.push({
+        name: "simulation",
+        params: { diagramId, projectId },
       });
     },
   },

@@ -130,6 +130,7 @@ export default {
             });
             this.$message.success("图标上传成功");
           }
+          await this.fetchIcons();
         };
       } catch (error) {
         console.error("上传图标失败：", error);
