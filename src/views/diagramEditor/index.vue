@@ -113,6 +113,20 @@
               @update:visible="isModalVisible = false"
               @submit="handleSubmit"
             />
+            <ControllerNodeDetailsModal
+              v-if="diagramType === 'controller'"
+              :visible.sync="isControllerNodeModalVisible"
+              :nodeData="selectedControllerNodeData"
+              @update:visible="isControllerNodeModalVisible = false"
+              @submit="handleControllerNodeSubmit"
+            />
+            <ControllerEdgeDetailsModal
+              v-if="diagramType === 'controller'"
+              :visible.sync="isControllerEdgeModalVisible"
+              :edgeData="selectedControllerEdgeData"
+              @update:visible="isControllerEdgeModalVisible = false"
+              @submit="handleControllerEdgeSubmit"
+            />
           </div>
         </el-main>
       </el-container>
@@ -123,18 +137,24 @@
 <script>
 import { Graph, Path } from "@antv/x6";
 import "@antv/x6-vue-shape";
-// import DataJson from "./components/data";
+
 import MenuBar from "./components/menuBar";
 import Drawer from "./components/drawer";
 import NodeDetailsModal from "./components/NodeDetailsModal.vue";
+import ControllerNodeDetailsModal from "./components/ControllerNodeDetailsModal.vue";
+import ControllerEdgeDetailsModal from "./components/ControllerEdgeDetailsModal.vue";
 import api from "../../api.js";
 // import { Transform } from "@antv/x6-plugin-transform";
-// import DialogCondition from "./components/dialog/condition.vue";
-// import DialogMysql from "./components/dialog/mysql.vue";
 
 export default {
   name: "DiagramEditor",
-  components: { NodeDetailsModal, Drawer, MenuBar },
+  components: {
+    NodeDetailsModal,
+    Drawer,
+    MenuBar,
+    ControllerNodeDetailsModal,
+    ControllerEdgeDetailsModal,
+  },
   data() {
     return {
       graph: "",
@@ -162,6 +182,30 @@ export default {
       graphProperties: {},
       autoSaveInterval: null,
       displayName: null, // 模型名称
+      isControllerNodeModalVisible: false,
+      selectedControllerNodeData: {
+        id: "node-1731268485649",
+        number: 1,
+        name: "生成器",
+        label: "生成器",
+        scripts: "",
+        properties: {
+          fillColor: "#f5f5f5",
+          lineWidth: 2,
+          category: "中间节点",
+        },
+      },
+      isControllerEdgeModalVisible: false,
+      selectedControllerEdgeData: {
+        id: "edge-1731268485649",
+        name: "生成器",
+        judgmentScripts: "",
+        actionScripts: "",
+        properties: {
+          fillColor: "#f5f5f5",
+          lineWidth: 2,
+        },
+      },
     };
   },
   props: ["diagramId", "modelId", "projectId", "diagramType"],
@@ -276,6 +320,96 @@ export default {
       } catch (error) {
         console.error("获取节点数据失败：", error);
         this.$message.error("无法加载节点数据，请稍后重试！");
+      }
+    },
+
+    async handleControllerNodeDblClick(nodeId) {
+      try {
+        if (!nodeId) {
+          throw new Error("节点ID无效");
+        }
+
+        let nodeData = null;
+
+        // 第一步：尝试从后端查询节点数据
+        const response = await api.queryNode(nodeId);
+        if (response && response.data && response.data.data) {
+          nodeData = response.data.data;
+        }
+
+        // 第二步：如果后端未找到节点数据，则从本地图形实例中获取
+        if (!nodeData) {
+          const node = this.graph.getCell(nodeId);
+          if (node) {
+            nodeData = node.getData();
+            // 如果需要，可以在这里添加更多逻辑来处理新节点的数据
+          }
+        }
+
+        // 第三步：如果仍然没有节点数据，则显示错误消息
+        if (!nodeData) {
+          this.$message.error("无法加载控制节点数据，请稍后重试！");
+          return;
+        }
+
+        // 将 nodeId 赋值给 nodeData.id（如果 nodeData 不存在 id 属性）
+        if (!nodeData.id) {
+          nodeData.id = nodeId;
+        }
+
+        // 将获取的节点数据赋值给 `selectedNodeData` 并显示侧边栏
+        this.selectedControllerNodeData = nodeData;
+        console.log("selectedControllerNodeData", nodeData);
+        this.isControllerNodeModalVisible = true;
+      } catch (error) {
+        console.error("获取控制节点数据失败：", error);
+        this.$message.error("无法加载控制节点数据，请稍后重试！");
+      }
+    },
+
+    async handleEdgeDblClick(edgeId) {
+      try {
+        if (!edgeId) {
+          throw new Error("边ID无效");
+        }
+
+        let edgeData = null;
+
+        // 第一步：尝试从后端查询边的数据
+        const response = await api.queryLine(edgeId);
+        if (response && response.data && response.data.data) {
+          edgeData = response.data.data;
+        }
+
+        console.log("edgeDataaaa", edgeData);
+
+        // 第二步：如果后端未找到边的数据，则从本地图形实例中获取
+        if (!edgeData) {
+          const edge = this.graph.getCell(edgeId);
+          if (edge) {
+            edgeData = edge.getData();
+            // 如果需要，可以在这里添加更多逻辑来处理新节点的数据
+          }
+        }
+
+        // 第三步：如果仍然没有节点数据，则显示错误消息
+        if (!edgeData) {
+          this.$message.error("无法加载边的数据，请稍后重试！");
+          return;
+        }
+
+        // 将 nodeId 赋值给 nodeData.id（如果 nodeData 不存在 id 属性）
+        if (!edgeData.id) {
+          edgeData.id = edgeId;
+        }
+
+        // 将获取的节点数据赋值给 `selectedNodeData` 并显示侧边栏
+        this.selectedControllerEdgeData = edgeData;
+        console.log("selectedControllerEdgeData", edgeData);
+        this.isControllerEdgeModalVisible = true;
+      } catch (error) {
+        console.error("获取边的数据失败：", error);
+        this.$message.error("无法加载边的数据，请稍后重试！");
       }
     },
 
@@ -542,16 +676,55 @@ export default {
         });
       });
 
-      graph.on("node:contextmenu", ({ e, x, y, node, view }) => {
-        // 右键点击一个节点触发
-        console.log(e, x, y, view);
-        this.showContextMenu = true;
+      graph.on("node:contextmenu", ({ e, node }) => {
+        // 获取鼠标相对于页面的坐标
+        const { x, y } = { x: e.clientX, y: e.clientY };
 
-        this.$nextTick(() => {
-          // this.$refs.menuBar.setItem({ type: 'node', item: node })
-          const p = graph.localToPage(x, y);
-          this.$refs.menuBar.initFn(p.x, p.y, { type: "node", item: node });
-        });
+        // 获取图表容器的边界信息
+        const { left, top, right, bottom } = document
+          .getElementById("draw-cot")
+          .getBoundingClientRect();
+
+        console.log("图表容器的边界：", { left, top, right, bottom });
+
+        // 判断鼠标是否点击在图表容器内
+        if (x > left && x < right && y > top && y < bottom) {
+          // 计算相对于图表容器的坐标
+          const localX = x - left;
+          const localY = y - top;
+
+          // 打印相对坐标，帮助调试
+          console.log("相对图表容器的坐标:", { localX, localY });
+
+          // 获取菜单栏的宽度和高度
+          const menuBarWidth = 150; // 假设菜单宽度为 150px
+          const menuBarHeight = 50; // 假设菜单高度为 50px
+
+          // 如果菜单的右侧超出了容器右边界，调整菜单的 X 坐标
+          let adjustedX = localX;
+          if (localX + menuBarWidth > right - left) {
+            adjustedX = right - left - menuBarWidth;
+          }
+
+          // 如果菜单的下侧超出了容器下边界，调整菜单的 Y 坐标
+          let adjustedY = localY;
+          if (localY + menuBarHeight > bottom - top) {
+            adjustedY = bottom - top - menuBarHeight;
+          }
+
+          // 打印调整后的坐标
+          console.log("调整后的坐标:", { adjustedX, adjustedY });
+
+          // 显示右键菜单，并传递节点信息和坐标
+          this.showContextMenu = true;
+
+          this.$nextTick(() => {
+            this.$refs.menuBar.initFn(adjustedX + 50, adjustedY + 50, {
+              type: "node",
+              item: node,
+            });
+          });
+        }
       });
 
       graph.on("edge:connected", ({ edge }) => {
@@ -616,11 +789,26 @@ export default {
       });
 
       graph.on("node:dblclick", ({ node }) => {
-        this.selectedNodeData = node.getData();
-        const nodeId = node.id; // 获取节点的 ID
-        this.handleNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
+        if (this.diagramType === "controller") {
+          this.selectedControllerNodeData = node.getData();
+          const nodeId = node.id; // 获取节点的 ID
+          this.handleControllerNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
+        } else {
+          this.selectedNodeData = node.getData();
+          const nodeId = node.id; // 获取节点的 ID
+          this.handleNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
+        }
+      });
+
+      graph.on("edge:dblclick", ({ edge }) => {
+        if (this.diagramType === "controller") {
+          this.selectedEdgeData = edge.getData(); // 获取边的数据
+          const edgeId = edge.id; // 获取边的 ID
+          this.handleEdgeDblClick(edgeId); // 调用方法处理边的双击事件，显示侧边栏
+        }
       });
     },
+
     // end of initGraph
     async showNodeStatus(statusList) {
       // const status = statusList.shift();
@@ -916,13 +1104,29 @@ export default {
     },
 
     addBasicNode(position, shape, label, type) {
+      // Determine the label based on diagramType
+      let nodeLabel = label || "基础组件";
+      let nodeCount = 0;
+
+      if (this.diagramType === "controller") {
+        // 获取当前图中节点的数量并加一
+        nodeCount = this.graph.getNodes().length;
+        nodeLabel = nodeCount.toString();
+      }
+
+      let controllerNodeCategory = type;
+      if (this.diagramType === "controller") {
+        // 获取当前图中节点的数量并加一
+        controllerNodeCategory = "中间节点";
+      }
+
       this.graph.addNode({
         shape,
         x: position.x,
         y: position.y,
         width: shape === "circle" ? 80 : 100,
         height: shape === "circle" ? 80 : 60,
-        label: label || "基础组件",
+        label: nodeLabel,
         data: {
           name: label,
           diagramId: this.diagramId,
@@ -933,8 +1137,9 @@ export default {
           scripts: "",
           signals: "",
           properties: {
-            category: type,
+            category: controllerNodeCategory,
           },
+          number: nodeCount,
         },
         attrs: {
           body: {
@@ -943,7 +1148,7 @@ export default {
             strokeWidth: 2,
           },
           label: {
-            text: label || "基础组件",
+            text: nodeLabel,
             fontSize: 14,
             fill: "#000",
           },
@@ -1067,6 +1272,85 @@ export default {
           // 如果有其他需要更新的视觉属性，可以在这里继续添加
         } else {
           console.warn(`未找到 ID 为 ${nodeData.id} 的节点`);
+        }
+      } catch (error) {
+        console.error("提交失败：", error);
+        if (error.response) {
+          console.error("服务器响应数据:", error.response.data);
+          this.$message.error(
+            `提交失败：${error.response.data.message || "请检查输入内容"}`
+          );
+        } else {
+          this.$message.error("网络错误，请稍后重试！");
+        }
+      }
+    },
+
+    async handleControllerNodeSubmit(nodeData) {
+      console.log("提交的控制节点数据:", nodeData); // 检查数据结构
+      try {
+        // 调用 API 更新节点数据
+        await api.updateNode(nodeData);
+        this.$message.success("控制节点数据提交成功！");
+
+        // 获取图表中的节点
+        const node = this.graph.getCell(nodeData.id);
+        console.log("graph", this.graph.toJSON());
+        console.log("nodee", node);
+        if (node) {
+          // 更新节点的数据
+          node.setData(nodeData);
+
+          // 更新节点的视觉属性，例如标签
+          if (nodeData.number) {
+            node.attr("label/text", nodeData.number.toString());
+          }
+
+          // 如果需要更新其他视觉属性，例如填充颜色
+          if (nodeData.properties && nodeData.properties.fillColor) {
+            node.attr("body/fill", nodeData.properties.fillColor);
+          }
+
+          // 如果有其他需要更新的视觉属性，可以在这里继续添加
+        } else {
+          console.warn(`未找到 ID 为 ${nodeData.id} 的控制节点`);
+        }
+      } catch (error) {
+        console.error("提交失败：", error);
+        if (error.response) {
+          console.error("服务器响应数据:", error.response.data);
+          this.$message.error(
+            `提交失败：${error.response.data.message || "请检查输入内容"}`
+          );
+        } else {
+          this.$message.error("网络错误，请稍后重试！");
+        }
+      }
+    },
+
+    async handleControllerEdgeSubmit(edgeData) {
+      console.log("提交的控制单元连接数据:", edgeData); // 检查数据结构
+      try {
+        // 调用 API 更新节点数据
+        await api.updateLine(edgeData);
+        this.$message.success("控制单元连接数据提交成功！");
+
+        // 获取图表中的节点
+        const edge = this.graph.getCell(edgeData.id);
+        console.log("graph", this.graph.toJSON());
+        console.log("edge", edge);
+        if (edge) {
+          // 更新节点的数据
+          edge.setData(edgeData);
+
+          // 如果需要更新其他视觉属性，例如填充颜色
+          if (edgeData.properties && edgeData.properties.fillColor) {
+            edge.attr("body/fill", edgeData.properties.fillColor);
+          }
+
+          // 如果有其他需要更新的视觉属性，可以在这里继续添加
+        } else {
+          console.warn(`未找到 ID 为 ${edgeData.id} 的连接线`);
         }
       } catch (error) {
         console.error("提交失败：", error);
