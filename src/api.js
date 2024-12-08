@@ -151,6 +151,46 @@ export default {
     return apiClient.post("/simgui/project/queryList", data);
   },
 
+  // 检查控制器绑定
+  checkControllerBind(projectId) {
+    return apiClient.post(`/simgui/project/checkControllerBind/${projectId}`);
+  },
+
+  // 下发策略
+  distributeStrategy(data) {
+    return apiClient.post("/simgui/project/distributeStrategy", data);
+  },
+
+  // 仿真检查
+  checkProject(projectId) {
+    return apiClient.post(`/simgui/simulation/check/${projectId}`);
+  },
+
+  // 仿真编译
+  compileProject(projectId) {
+    return apiClient.post(`/simgui/simulation/compile/${projectId}`);
+  },
+
+  // 仿真运行
+  runProject(projectId) {
+    return apiClient.post(`/simgui/simulation/run/${projectId}`);
+  },
+
+  // 查看仿真结果
+  viewResult(projectId) {
+    return apiClient.post(`/simgui/simulation/viewResult/${projectId}`);
+  },
+
+  // 仿真节点的曲线参数增加下一个点
+  addCurve(data) {
+    return apiClient.post("/simgui/simulation/addParameterList", data);
+  },
+
+  // 仿真节点的曲线参数新增所有点
+  addAllTime(data) {
+    return apiClient.post("/simgui/simulation/addAllParameter", data);
+  },
+
   // === Category APIs ===
   addCategory(data) {
     return apiClient.post("/simgui/category/add", data);

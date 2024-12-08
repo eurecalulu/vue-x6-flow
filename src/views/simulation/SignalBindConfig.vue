@@ -21,7 +21,7 @@
         ></el-input>
       </el-form-item>
 
-      <el-form-item label="设备号" class="form-item">
+      <el-form-item label="SOC" class="form-item">
         <el-input
           v-model="localSignalsBindData.SOC"
           placeholder="请输入SOC"

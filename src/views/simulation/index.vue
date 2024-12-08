@@ -52,7 +52,6 @@
               align-items: center;
             "
           >
-            <!-- 检查按钮 -->
             <el-button
               icon="el-icon-check"
               size="mini"
@@ -62,12 +61,11 @@
             >
               绑定信号
             </el-button>
-            <!-- 编译按钮 -->
             <el-button
               icon="el-icon-refresh"
               size="mini"
               type="default"
-              @click="compileFn"
+              @click="checkFn"
               style="font-size: 12px"
             >
               检查
@@ -76,7 +74,7 @@
               icon="el-icon-caret-right"
               size="mini"
               type="default"
-              @click="runFn"
+              @click="compileFn"
               style="font-size: 12px"
             >
               编译
@@ -95,7 +93,7 @@
               icon="el-icon-upload"
               size="mini"
               type="default"
-              @click="saveFn"
+              @click="saveFn(true)"
               style="font-size: 12px"
             >
               保存
@@ -135,16 +133,27 @@
             />
           </div>
         </el-main>
+        <div
+          class="resize-handle"
+          @mousedown="startResize"
+          style="flex-shrink: 0"
+        ></div>
         <el-footer
           :style="{
             height: `${footerHeight}px`,
-            resize: 'vertical',
             overflow: 'auto',
             borderTop: '1px solid #ddd',
+            position: 'relative',
           }"
+          style="flex-shrink: 0"
           @mousedown="startResize"
         >
-          <SimulationOutput ref="simulationOutput" />
+          <!-- 拖拽句柄 -->
+          <SimulationOutput
+            ref="simulationOutput"
+            :is-simulation-running="isSimulationRunning"
+            @cancel-simulation="handleCancelSimulation"
+          />
         </el-footer>
       </el-container>
     </el-container>
@@ -155,17 +164,9 @@
 import { Graph, Path } from "@antv/x6";
 import "@antv/x6-vue-shape";
 import SimulationOutput from "./SimulationOutput.vue";
-// import DataJson from "./components/data";
-// import MenuBar from "./components/menuBar";
-// import Drawer from "./components/drawer";
 import SimuNodeDetailsModal from "./SimuNodeDetailsModal.vue";
 import SimulationConfigModal from "./SimulationConfigModal.vue";
 import api from "../../api.js";
-// CreateProjectDialog from "@/views/projectManagement/CreateProjectDialog.vue";
-// import NodeDetailsModal from "@/views/diagramEditor/components/NodeDetailsModal.vue";
-// import { Transform } from "@antv/x6-plugin-transform";
-// import DialogCondition from "./components/dialog/condition.vue";
-// import DialogMysql from "./components/dialog/mysql.vue";
 
 export default {
   name: "DiagramEditor",
@@ -176,7 +177,7 @@ export default {
   },
   data() {
     return {
-      graph: "",
+      graph: null,
       timer: "",
       isLock: false,
       showContextMenu: false,
@@ -204,7 +205,8 @@ export default {
       footerHeight: 180, // 初始高度
       resizing: false, // 是否正在调整高度
       isSimulationConfigModalVisible: false,
-      currentSimuConfig: null,
+      currentSimuConfig: {},
+      isSimulationRunning: false,
     };
   },
   props: ["diagramId", "modelId", "projectId"],
@@ -220,17 +222,15 @@ export default {
   mounted() {
     // console.log(document.getElementById("draw-cot"));
     this.fetchDisplayName();
-    // 初始化 graph
-    this.initGraph();
-    // 按钮绑定，绑定键盘快捷键
-    this.keyBindFn();
-    // 加载图表数据
-    this.loadGraphData();
-    // 执行，加载初始数据并开始运行
-    this.startFn();
+    this.$nextTick(() => {
+      // 确保 DOM 渲染完成后初始化 Graph
+      this.initGraph();
+      this.loadGraphData();
+      this.startFn();
+    });
     // 启动自动保存定时器，每3分钟执行一次
     this.autoSaveInterval = setInterval(() => {
-      this.saveFn();
+      this.saveFn(false);
     }, 180000); // 180000 毫秒 = 3 分钟
   },
   beforeDestroy() {
@@ -502,15 +502,10 @@ export default {
         },
         container: document.getElementById("draw-cot"),
         panning: {
-          enabled: true,
-          eventTypes: ["leftMouseDown", "mouseWheel"],
+          enabled: false,
         },
         mousewheel: {
-          enabled: true,
-          modifiers: "ctrl",
-          factor: 1.1,
-          maxScale: 1.5,
-          minScale: 0.5,
+          enabled: false,
         },
         highlighting: {
           magnetAdsorbed: {
@@ -525,7 +520,7 @@ export default {
           },
         },
         connecting: {
-          snap: true,
+          snap: false,
           allowBlank: false,
           allowLoop: false,
           highlight: true,
@@ -534,9 +529,11 @@ export default {
           anchor: "center",
           validateMagnet() {
             // return magnet.getAttribute('port-group') !== 'top'
-
             // 限制连线配置
-            return true;
+            return false;
+          },
+          validateConnection() {
+            return false; // 禁止所有边的连接
           },
           createEdge() {
             return graph.createEdge({
@@ -563,43 +560,23 @@ export default {
           modifiers: "shift",
           rubberband: true,
         },
-        keyboard: true,
+        keyboard: false,
         clipboard: true,
         history: true,
+        interacting() {
+          return {
+            nodeMovable: false, // 禁用节点移动
+            magnetConnectable: true, // 根据需要设置
+            edgeMovable: false,
+            edgeLabelMovable: false,
+            arrowheadMovable: false,
+            vertexMovable: false,
+            vertexAddable: false,
+            vertexDeletable: false,
+          };
+        },
       });
       this.graph = graph;
-
-      graph.on("edge:contextmenu", ({ e, x, y, edge, view }) => {
-        //  右键点击一条边触发
-        console.log(x, y, view);
-        this.showContextMenu = true;
-        this.$nextTick(() => {
-          this.$refs.menuBar.initFn(e.offsetX, e.offsetY, {
-            type: "edge",
-            item: edge,
-          });
-        });
-      });
-
-      graph.on("node:contextmenu", ({ e, x, y, node, view }) => {
-        // 右键点击一个节点触发
-        console.log(e, x, y, view);
-        this.showContextMenu = true;
-
-        this.$nextTick(() => {
-          // this.$refs.menuBar.setItem({ type: 'node', item: node })
-          const p = graph.localToPage(x, y);
-          this.$refs.menuBar.initFn(p.x, p.y, { type: "node", item: node });
-        });
-      });
-
-      graph.on("edge:connected", ({ edge }) => {
-        edge.attr({
-          line: {
-            strokeDasharray: "",
-          },
-        });
-      });
 
       graph.on("node:change:data", ({ node }) => {
         const edges = graph.getIncomingEdges(node);
@@ -623,6 +600,9 @@ export default {
         const nodeId = node.id; // 获取节点的 ID
         this.handleNodeDblClick(nodeId); // 调用方法获取节点数据并显示侧边栏
       });
+
+      this.graph.disablePanning();
+      this.graph.disableKeyboard();
     },
     // end of initGraph
     async showNodeStatus(statusList) {
@@ -664,52 +644,7 @@ export default {
       this.graph.centerContent();
     },
     createMenuFn() {},
-    keyBindFn() {
-      // copy cut paste
-      this.graph.bindKey(["meta+c", "ctrl+c"], () => {
-        const cells = this.graph.getSelectedCells();
-        if (cells.length) {
-          this.graph.copy(cells);
-        }
-        return false;
-      });
-      this.graph.bindKey(["meta+x", "ctrl+x"], () => {
-        const cells = this.graph.getSelectedCells();
-        if (cells.length) {
-          this.graph.cut(cells);
-        }
-        return false;
-      });
-      this.graph.bindKey(["meta+v", "ctrl+v"], () => {
-        if (!this.graph.isClipboardEmpty()) {
-          const cells = this.graph.paste({ offset: 32 });
-          this.graph.cleanSelection();
-          this.graph.select(cells);
-        }
-        return false;
-      });
-
-      // undo redo
-      this.graph.bindKey(["meta+z", "ctrl+z"], () => {
-        if (this.graph.history.canUndo()) {
-          this.graph.history.undo();
-        }
-        return false;
-      });
-      // delete
-      this.graph.bindKey(["delete"], () => {
-        const select = this.graph.getSelectedCells();
-        select?.forEach((item) => {
-          if (/edge/.test(item.shape)) {
-            this.graph.removeEdge(item.id);
-          } else {
-            this.graph.removeNode(item.id);
-          }
-        });
-        return false;
-      });
-    },
-    async saveFn() {
+    async saveFn(manual) {
       try {
         const graphData = this.graph.toJSON(); // 获取当前图表的 JSON 数据
         const diagramRequestBody = {
@@ -758,28 +693,54 @@ export default {
           api.saveOrUpdateNodeList(this.diagramId, nodes), // 批量保存节点
           api.saveOrUpdateLineList(this.diagramId, edges), // 批量保存边
         ]);
-        this.$message.success("保存图表数据成功");
+        if (manual) {
+          this.$message.success("保存图表数据成功");
+        }
       } catch (error) {
         console.error("保存图表数据失败：", error);
       }
     },
-    lockFn() {
-      this.isLock = !this.isLock;
-      if (this.isLock) {
-        this.graph.enablePanning();
-        this.graph.enableKeyboard();
-      } else {
-        this.graph.disablePanning();
-        this.graph.disableKeyboard();
+
+    async checkFn() {
+      console.log("checkFn");
+      try {
+        // 调用API接口
+        const response = await api.checkProject(this.projectId);
+
+        // 假设API返回的数据结构为 { data: { outputLog: '...' } }
+        let outputLog = response.data.data;
+
+        if (response.data.message === "success" && response.data.data == null) {
+          outputLog = "检查非常成功";
+        }
+        // 通过ref调用子组件的方法，更新outputLog并切换标签页
+        this.$refs.simulationOutput.updateOutputLog(outputLog);
+      } catch (error) {
+        // 处理错误，例如显示错误消息
+        this.$message.error("检查失败，请稍后再试！");
+        console.error("API调用失败:", error);
       }
     },
 
-    checkFn() {
-      console.log("checkFn");
-    },
-
-    compileFn() {
+    async compileFn() {
       console.log("compileFn");
+      try {
+        // 调用API接口
+        const response = await api.compileProject(this.projectId);
+
+        // 假设API返回的数据结构为 { data: { outputLog: '...' } }
+        let outputLog = response.data.data;
+
+        if (response.data.message === "success" && response.data.data == null) {
+          outputLog = "编译非常成功";
+        }
+        // 通过ref调用子组件的方法，更新outputLog并切换标签页
+        this.$refs.simulationOutput.updateCompileOutput(outputLog);
+      } catch (error) {
+        // 处理错误，例如显示错误消息
+        this.$message.error("编译失败，请稍后再试！");
+        console.error("API调用失败:", error);
+      }
     },
 
     runFn() {
@@ -852,14 +813,36 @@ export default {
       this.isSimulationConfigModalVisible = false;
     },
     async handleCreateOrUpdateConfig(form) {
+      this.isSimulationRunning = true;
       try {
-        if (form.id) {
-          console.log("提交的数据", form);
-          // 更新模型
-          // await this.updateProject(form);
-        } else {
-          console.log("提交的数据", form);
-          // await this.createProject({ ...form, diagramId });
+        // 获取原始项目数据以确保不丢失其他字段
+        const queryResponse = await api.queryProject(this.projectId);
+        const originalProject = queryResponse.data.data;
+        // 合并原始数据和新的配置数据
+        const updatedProject = {
+          ...originalProject,
+          ...form, // 更新配置字段
+        };
+        // 更新项目配置
+        await api.updateProject(updatedProject);
+        this.$message.success("项目配置更新成功");
+
+        // 运行项目
+        const response = await api.runProject(this.projectId);
+        // 假设API返回的数据结构为 { data: { outputLog: '...' } }
+        let outputLog = response.data.data;
+
+        if (response.data.message === "success" && response.data.data == null) {
+          outputLog = "项目运行成功";
+        }
+        // this.$message.success("项目运行成功");
+
+        // 更新输出日志
+        if (
+          this.$refs.simulationOutput &&
+          this.$refs.simulationOutput.updateOutputLog
+        ) {
+          this.$refs.simulationOutput.updateOutputLog(outputLog);
         }
       } catch (error) {
         this.$message.error(`操作失败：${error.message}`);
@@ -868,30 +851,87 @@ export default {
       }
     },
     async openSimulationConfig() {
-      // const response = await api.queryProject(this.projectId);
-      // if (response.data.status === 200) {
-      //   this.currentSimuConfig = response.data.data;
-      //   this.isSimulationConfigModalVisible = true;
-      // }
-      this.isSimulationConfigModalVisible = true;
+      try {
+        const response = await api.queryProject(this.projectId);
+        const currentProject = response.data.data;
+        console.log("currentProject", currentProject);
+        const configFields = [
+          "startTime",
+          "endTime",
+          "intervalNum",
+          "intervalTime",
+          "integralMethod",
+          "integralTolerance",
+          "jacobianMethod",
+          "rootSearch",
+          "endReboot",
+          "initialStepSize",
+          "maxStepSize",
+        ];
+        const simuConfig = {};
+        configFields.forEach((field) => {
+          if (field === "rootSearch" || field === "endReboot") {
+            // 显式转换为布尔值
+            simuConfig[field] =
+              currentProject[field] === true || currentProject[field] === false
+                ? currentProject[field]
+                : false;
+          } else {
+            // 对于其他字段，按原来的逻辑赋值
+            simuConfig[field] = currentProject[field] || "";
+          }
+        });
+        // 设置当前仿真配置数据
+        this.currentSimuConfig = simuConfig;
+        console.log("simuConfig", simuConfig);
+        this.isSimulationConfigModalVisible = true;
+      } catch (error) {
+        this.$message.error(`获取项目配置失败：${error.message}`);
+      } finally {
+        this.isSimulationRunning = false;
+      }
+    },
+
+    handleCancelSimulation() {
+      this.isSimulationRunning = false;
+      let outputLog = "初始状态";
+      this.$refs.simulationOutput.updateOutputLog(outputLog);
+      // 这里可以添加更多的停止仿真逻辑
+      // 例如，调用 API 终止仿真任务
     },
   },
 };
 </script>
 
 <style lang="less" scoped>
+:deep(.el-tabs) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 确保 el-tab-pane 占满 el-tabs 并允许子元素扩展 */
+:deep(.el-tab-pane) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 .el-tabs {
   height: 100%; /* 确保 tabs 占满父容器 */
+  display: flex;
+  flex-direction: column;
 }
 
 .el-tab-pane {
   height: 100%; /* 确保 tab-pane 占满 tabs */
+  display: flex;
+  flex-direction: column;
 }
 
+/* 确保 #draw-cot 占满 el-tab-pane 并允许内部内容扩展 */
 #draw-cot {
-  //margin-left: 20px;
-  //margin-right: 5px;
-  //margin-top: 10px;
   padding: 0px;
   border: 1px solid #ddd;
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
@@ -979,8 +1019,16 @@ header i {
 }
 
 .el-footer {
-  resize: vertical;
   overflow: auto;
   cursor: ns-resize;
+}
+
+.resize-handle {
+  width: 100%;
+  height: 1px; /* 调整句柄的高度 */
+  cursor: ns-resize;
+  background-color: #ddd; /* 添加可见的背景色 */
+  /* 增加 z-index 以确保句柄在最前 */
+  z-index: 10;
 }
 </style>

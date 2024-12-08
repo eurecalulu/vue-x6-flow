@@ -1,7 +1,7 @@
 <template>
   <div class="simulation-output">
     <!-- 进度条和操作按钮 -->
-    <div class="progress-header">
+    <div class="progress-header" v-if="isSimulationRunning">
       <span class="progress-label">仿真进度</span>
       <div class="progress-bar">
         <div class="progress" :style="{ width: progress + '%' }"></div>
@@ -12,6 +12,9 @@
         >
         <el-button class="open-button" size="mini" @click="openOutputFile"
           >打开输出文件</el-button
+        >
+        <el-button class="open-button" size="mini" @click="openOutputFile"
+          >查看仿真结果</el-button
         >
       </div>
     </div>
@@ -37,9 +40,15 @@
 <script>
 export default {
   name: "SimulationOutput",
+  props: {
+    isSimulationRunning: {
+      type: Boolean,
+      required: true,
+    },
+  },
   data() {
     return {
-      progress: 20, // 模拟进度值
+      progress: 100, // 模拟进度值
       activeTab: "output", // 默认选中“输出”标签页
       compileOutput:
         "The initialization finished successfully without homotopy method.",
@@ -50,9 +59,18 @@ export default {
   methods: {
     cancelSimulation() {
       this.$message.warning("仿真已取消！");
+      this.$emit("cancel-simulation");
     },
     openOutputFile() {
       this.$message.info("打开输出文件的功能还未实现！");
+    },
+    updateOutputLog(newLog) {
+      this.outputLog = newLog;
+      this.activeTab = "output";
+    },
+    updateCompileOutput(newLog) {
+      this.compileOutput = newLog;
+      this.activeTab = "compile";
     },
   },
 };
@@ -83,7 +101,7 @@ export default {
 }
 
 .progress-bar {
-  flex: 0 0 80%; /* 占 70% 宽度 */
+  flex: 0 0 60%; /* 占 70% 宽度 */
   height: 20px;
   background-color: #e0e0e0;
   border-radius: 4px;
@@ -123,6 +141,7 @@ export default {
   padding: 10px;
   border-radius: 4px;
   border: 1px solid #d9e2ec;
+  height: 80%;
 }
 
 .output-area {

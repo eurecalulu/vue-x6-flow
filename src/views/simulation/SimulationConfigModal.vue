@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     title="仿真配置"
-    :visible="isVisible"
+    :visible="internalVisible"
     width="40%"
     @close="handleClose"
     class="custom-dialog"
@@ -42,15 +42,34 @@
         ></el-input>
       </el-form-item>
 
-      <el-form-item label="积分误差" prop="integralError">
+      <el-form-item label="积分误差" prop="integralTolerance">
         <el-input
-          v-model="form.integralError"
+          v-model="form.integralTolerance"
           placeholder="请输入积分误差"
         ></el-input>
       </el-form-item>
 
-      <el-form-item label="雅可比" prop="jacobian">
-        <el-input v-model="form.jacobian" placeholder="请输入雅可比"></el-input>
+      <el-form-item label="雅可比" prop="jacobianMethod">
+        <el-input
+          v-model="form.jacobianMethod"
+          placeholder="请输入雅可比"
+        ></el-input>
+      </el-form-item>
+
+      <el-form-item label="根搜索" prop="rootSearch">
+        <el-switch
+          v-model="form.rootSearch"
+          active-text="启用"
+          inactive-text="禁用"
+        ></el-switch>
+      </el-form-item>
+
+      <el-form-item label="结束重启" prop="endReboot">
+        <el-switch
+          v-model="form.endReboot"
+          active-text="启用"
+          inactive-text="禁用"
+        ></el-switch>
       </el-form-item>
 
       <el-form-item label="初始步长" prop="initialStepSize">
@@ -83,23 +102,24 @@ export default {
     },
     configData: {
       type: Object,
-      default: null,
+      default: () => ({}),
     },
   },
   data() {
     return {
+      internalVisible: this.isVisible,
       form: {
-        startTime: "",
-        endTime: "",
-        intervalNum: "",
-        intervalTime: "",
+        startTime: 0,
+        endTime: 0,
+        intervalNum: 0,
+        intervalTime: 0,
         integralMethod: "",
-        integralError: "",
-        jacobian: "",
-        rootSearch: "",
-        endReboot: "",
-        initialStepSize: "",
-        maxStepSize: "",
+        integralTolerance: 0.0,
+        jacobianMethod: "",
+        rootSearch: false,
+        endReboot: false,
+        initialStepSize: 0,
+        maxStepSize: 0,
       },
       // rules: {
       //   name: [{ required: true, message: "请输入工程名称", trigger: "blur" }],
@@ -110,6 +130,9 @@ export default {
     };
   },
   watch: {
+    isVisible(val) {
+      this.internalVisible = val;
+    },
     configData: {
       handler(newVal) {
         if (newVal) {
@@ -119,6 +142,7 @@ export default {
         }
       },
       immediate: true,
+      deep: true,
     },
   },
   methods: {
@@ -129,17 +153,17 @@ export default {
 
     resetForm() {
       this.form = {
-        startTime: "",
-        endTime: "",
-        intervalNum: "",
-        intervalTime: "",
+        startTime: 0,
+        endTime: 0,
+        intervalNum: 0,
+        intervalTime: 0,
         integralMethod: "",
-        integralError: "",
-        jacobian: "",
-        rootSearch: "",
-        endReboot: "",
-        initialStepSize: "",
-        maxStepSize: "",
+        integralTolerance: 0.0,
+        jacobianMethod: "",
+        rootSearch: false,
+        endReboot: false,
+        initialStepSize: 0,
+        maxStepSize: 0,
       };
     },
 
@@ -153,6 +177,7 @@ export default {
           this.$emit("submit", submitData);
           this.close();
         } else {
+          this.$message.error("请正确填写表单");
           console.log("表单验证失败");
         }
       });
