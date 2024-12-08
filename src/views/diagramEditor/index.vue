@@ -25,7 +25,11 @@
         width="280px"
         style="background-color: #f7f7f7; border-right: 0.2px solid #ddd"
       >
-        <Drawer @addNode="addNode" :modelId="effectiveModelId" />
+        <Drawer
+          @addNode="addNode"
+          :modelId="effectiveModelId"
+          :diagramType="this.diagramType"
+        />
       </el-aside>
 
       <!-- 主内容区 -->
@@ -103,6 +107,7 @@
               </el-tab-pane>
             </el-tabs>
             <NodeDetailsModal
+              v-if="diagramType !== 'controller'"
               :visible.sync="isModalVisible"
               :nodeData="selectedNodeData"
               @update:visible="isModalVisible = false"
@@ -159,7 +164,7 @@ export default {
       displayName: null, // 模型名称
     };
   },
-  props: ["diagramId", "modelId", "projectId"],
+  props: ["diagramId", "modelId", "projectId", "diagramType"],
   computed: {
     // 使用计算属性来动态获取 modelId 和 projectId
     effectiveModelId() {
@@ -821,7 +826,7 @@ export default {
 
         // 3. 处理其他基础组件
         if (["rect", "circle", "ellipse", "polygon"].includes(shape)) {
-          this.addBasicNode(localPosition, shape, label);
+          this.addBasicNode(localPosition, shape, label, type);
           return;
         }
 
@@ -910,7 +915,7 @@ export default {
       });
     },
 
-    addBasicNode(position, shape, label) {
+    addBasicNode(position, shape, label, type) {
       this.graph.addNode({
         shape,
         x: position.x,
@@ -918,6 +923,19 @@ export default {
         width: shape === "circle" ? 80 : 100,
         height: shape === "circle" ? 80 : 60,
         label: label || "基础组件",
+        data: {
+          name: label,
+          diagramId: this.diagramId,
+          modelId: this.modelId,
+          parameters: [],
+          inputs: [],
+          outputs: [],
+          scripts: "",
+          signals: "",
+          properties: {
+            category: type,
+          },
+        },
         attrs: {
           body: {
             fill: "#EFEFEF",

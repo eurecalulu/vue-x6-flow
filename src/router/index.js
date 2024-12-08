@@ -36,7 +36,7 @@ const routes = [
     component: () => import("@/views/modelManagement"),
   },
   {
-    path: "/diagramEditor/:diagramId/:modelId?/:projectId?",
+    path: "/diagramEditor/:diagramId/:modelId?/:projectId?/:diagramType?",
     name: "DiagramEditor",
     component: () => import("@/views/diagramEditor/index.vue"),
     props: true, // 允许通过路由参数传递 diagramId, modelId和projectId

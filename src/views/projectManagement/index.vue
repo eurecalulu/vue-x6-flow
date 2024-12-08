@@ -218,7 +218,7 @@ export default {
       // 跳转到 Diagram 编辑页面，传递模型的 diagramId
       await this.$router.push({
         name: "DiagramEditor",
-        params: { diagramId, projectId },
+        params: { diagramId, projectId, diagramType: "simulation" },
       });
     },
     async openSimulation(row) {

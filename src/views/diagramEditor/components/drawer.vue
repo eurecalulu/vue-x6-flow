@@ -35,17 +35,25 @@
         </div>
       </section>
     </div>
+    <type-dialog ref="typeDialog" />
   </div>
 </template>
 
 <script>
 import api from "@/api"; // 导入 API 模块
+import TypeDialog from "./typeDialog.vue";
 export default {
   name: "DrawerCom",
+  components: {
+    TypeDialog,
+  },
   props: {
     modelId: {
       type: String,
       required: true, // 指定 modelId 是必需的
+    },
+    diagramType: {
+      type: String,
     },
   },
   data() {
@@ -108,76 +116,83 @@ export default {
     dragend(item, event) {
       // Emit 绝对坐标
       const { x, y } = { x: event.clientX, y: event.clientY };
-      this.$emit("addNode", {
-        shape: item.shape,
-        icon: item.icon,
-        label: item.label,
-        type: item.type,
-        x,
-        y,
-      });
+      if (
+        item.type === "基础组件" &&
+        !item.shape.includes("line") &&
+        this.diagramType !== "controller"
+      ) {
+        this.$refs.typeDialog.openDialog().then((selectedCategory) => {
+          this.$emit("addNode", {
+            shape: item.shape,
+            icon: item.icon,
+            label: item.label,
+            type: selectedCategory, // 这里传递用户选择的category
+            x,
+            y,
+          });
+        });
+      } else {
+        this.$emit("addNode", {
+          shape: item.shape,
+          icon: item.icon,
+          label: item.label,
+          type: item.type,
+          x,
+          y,
+        });
+      }
     },
     async fetchComponentList() {
       try {
-        const data = {
-          currentPage: 1,
-          pageSize: -1,
-          searchKey: "",
-          // selectedType: this.selectedType,
-        };
-        // 假设接口返回所有模型
-        const response = await api.queryModelList(data); // 获取模型列表
-        const models = response.data.data;
+        if (this.diagramType !== "controller") {
+          const data = {
+            currentPage: 1,
+            pageSize: -1,
+            searchKey: "",
+            // selectedType: this.selectedType,
+          };
+          // 假设接口返回所有模型
+          const response = await api.queryModelList(data); // 获取模型列表
+          const models = response.data.data;
 
-        // 去除当前模型（假设你有当前模型 ID）
-        const currentModelId = this.modelId; // 假设从路由获取当前模型 ID
-        const filteredModels = models.filter(
-          (model) => model.id !== currentModelId
-        );
+          // 去除当前模型（假设你有当前模型 ID）
+          const currentModelId = this.modelId; // 假设从路由获取当前模型 ID
+          const filteredModels = models.filter(
+            (model) => model.id !== currentModelId
+          );
 
-        // console.log("Filtered Models:", filteredModels);
+          // console.log("Filtered Models:", filteredModels);
 
-        // 批量请求图标数据
-        const iconIds = filteredModels
-          .map((model) => model.iconId)
-          .filter(Boolean); // 获取所有 iconId
+          // 批量请求图标数据
+          const iconIds = filteredModels
+            .map((model) => model.iconId)
+            .filter(Boolean); // 获取所有 iconId
 
-        // 批量请求图标数据，缓存命中则跳过
-        const uncachedIconIds = iconIds.filter((id) => !this.iconCache[id]);
-        const iconResponses = await Promise.all(
-          uncachedIconIds.map((id) => api.queryIcon(id))
-        );
-        iconResponses.forEach((res, index) => {
-          const iconData = res.data?.data?.data; // 提取 Base64 数据
-          if (iconData) {
-            this.iconCache[uncachedIconIds[index]] = iconData; // 缓存图标数据
-          }
-        });
+          // 批量请求图标数据，缓存命中则跳过
+          const uncachedIconIds = iconIds.filter((id) => !this.iconCache[id]);
+          const iconResponses = await Promise.all(
+            uncachedIconIds.map((id) => api.queryIcon(id))
+          );
+          iconResponses.forEach((res, index) => {
+            const iconData = res.data?.data?.data; // 提取 Base64 数据
+            if (iconData) {
+              this.iconCache[uncachedIconIds[index]] = iconData; // 缓存图标数据
+            }
+          });
 
-        // console.log("Updated Icon Cache:", this.iconCache);
+          // 格式化模型数据
+          this.modelList = filteredModels.map((model) => ({
+            label: model.name,
+            type: model.modelType || "未分类",
+            category: model.category || "未分组",
+            icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
+            shape: "custom-model",
+          }));
 
-        // 格式化模型数据
-        this.modelList = filteredModels.map((model) => ({
-          label: model.name,
-          type: model.modelType || "未分类",
-          category: model.category || "未分组",
-          icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
-          shape: "custom-model",
-        }));
+          // 将模型合并到 `configList` 中
+          this.configList = [...this.configList, ...this.modelList];
+        }
 
-        // 格式化模型数据
-        // this.modelList = filteredModels.map((model) => ({
-        //   label: model.name,
-        //   type: model.type || "未分类",
-        //   category: model.category || "未分组",
-        //   icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
-        //   shape: "custom-model",
-        // }));
-
-        // console.log("Model List with Icons:", this.modelList);
-
-        // 将模型合并到 `configList` 中
-        this.configList = [...this.configList, ...this.modelList];
         this.categorizeComponents(this.configList);
         this.initializeCategoryState();
         // console.log("Final Config List:", this.configList);

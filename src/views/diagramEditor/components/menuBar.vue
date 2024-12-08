@@ -6,13 +6,13 @@
     @click.stop=""
     style="padding: 0"
   >
-    <div
-      class="text item"
-      @click.stop="callBack('source')"
-      v-if="item.type !== 'edge'"
-    >
-      修改数据源
-    </div>
+    <!--    <div-->
+    <!--      class="text item"-->
+    <!--      @click.stop="callBack('source')"-->
+    <!--      v-if="item.type !== 'edge'"-->
+    <!--    >-->
+    <!--      修改数据源-->
+    <!--    </div>-->
     <div class="text item" @click.stop="callBack('remove')">删除</div>
   </el-card>
 </template>

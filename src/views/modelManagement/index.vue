@@ -231,10 +231,11 @@ export default {
     async openDiagramEditor(row) {
       let diagramId = row.diagramId;
       let modelId = row.id;
+      let diagramType = row.type; // controller or simulation
       // 跳转到 Diagram 编辑页面，传递模型的 diagramId
       await this.$router.push({
         name: "DiagramEditor",
-        params: { diagramId, modelId },
+        params: { diagramId, modelId, diagramType },
       });
     },
   },
