@@ -144,6 +144,7 @@ export default {
     },
     async fetchComponentList() {
       try {
+        console.log("diagramType", this.diagramType);
         if (this.diagramType !== "controller") {
           const data = {
             currentPage: 1,

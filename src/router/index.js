@@ -36,10 +36,10 @@ const routes = [
     component: () => import("@/views/modelManagement"),
   },
   {
-    path: "/diagramEditor/:diagramId/:modelId?/:projectId?/:diagramType?",
+    path: "/diagramEditor/:diagramType/:diagramId/:modelId?/:projectId?",
     name: "DiagramEditor",
     component: () => import("@/views/diagramEditor/index.vue"),
-    props: true, // 允许通过路由参数传递 diagramId, modelId和projectId
+    props: true, // 允许通过路由参数传递 diagramId, modelId, projectId, diagramType
   },
   {
     path: "/simulation/:diagramId/:projectId",
