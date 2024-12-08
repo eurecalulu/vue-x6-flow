@@ -152,6 +152,7 @@
           <SimulationOutput
             ref="simulationOutput"
             :is-simulation-running="isSimulationRunning"
+            :project-id="this.projectId"
             @cancel-simulation="handleCancelSimulation"
           />
         </el-footer>

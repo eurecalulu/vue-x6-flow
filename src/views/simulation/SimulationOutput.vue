@@ -13,7 +13,7 @@
         <el-button class="open-button" size="mini" @click="openOutputFile"
           >打开输出文件</el-button
         >
-        <el-button class="open-button" size="mini" @click="openOutputFile"
+        <el-button class="open-button" size="mini" @click="showResultDialog"
           >查看仿真结果</el-button
         >
       </div>
@@ -34,15 +34,32 @@
         </el-tab-pane>
       </el-tabs>
     </div>
+
+    <!-- 仿真结果对话框 -->
+    <SimulationResultDialog
+      :visible="resultDialogVisible"
+      @update:visible="resultDialogVisible = $event"
+      :result="outputLog"
+      :variables="fakeData"
+    />
   </div>
 </template>
 
 <script>
+import SimulationResultDialog from "./SimulationResultDialog.vue";
+import api from "@/api";
 export default {
   name: "SimulationOutput",
+  components: {
+    SimulationResultDialog,
+  },
   props: {
     isSimulationRunning: {
       type: Boolean,
+      required: true,
+    },
+    projectId: {
+      type: String,
       required: true,
     },
   },
@@ -54,6 +71,36 @@ export default {
         "The initialization finished successfully without homotopy method.",
       outputLog:
         "### STATISTICS ###\nThe simulation finished successfully.###\nThe simulation finished successfully.###\nThe simulation finished successfully.###\nThe simulation finished successfully.",
+      resultDialogVisible: false, // 控制结果弹框的显示与隐藏
+      groupedVariables: {}, // 存储按 name 分组后的变量
+      fakeData: {
+        Thermal: [
+          {
+            variableName: "temp1",
+            unit: "C",
+            description: "Temperature sensor reading",
+          },
+          {
+            variableName: "temp2",
+            unit: "C",
+            description: "Temperature sensor reading in room 2",
+          },
+        ],
+        Pressure: [
+          {
+            variableName: "pressure1",
+            unit: "Pa",
+            description: "Pressure sensor reading",
+          },
+        ],
+        Humidity: [
+          {
+            variableName: "humidity1",
+            unit: "%",
+            description: "Humidity sensor reading",
+          },
+        ],
+      },
     };
   },
   methods: {
@@ -71,6 +118,37 @@ export default {
     updateCompileOutput(newLog) {
       this.compileOutput = newLog;
       this.activeTab = "compile";
+    },
+    showResultDialog() {
+      api
+        .viewResult(this.projectId)
+        .then((response) => {
+          this.processVariables(response.data.data);
+          this.resultDialogVisible = true;
+        })
+        .catch((error) => {
+          console.error("Error fetching results:", error);
+        });
+    },
+
+    // 处理 API 返回的数据，按 name 分组
+    processVariables(variables) {
+      const grouped = {};
+
+      variables.forEach((variable) => {
+        const { name, variableName, unit, defaultValue, description } =
+          variable;
+
+        // 如果 name 没有分组，则初始化一个空数组
+        if (!grouped[name]) {
+          grouped[name] = [];
+        }
+
+        // 将 variableName 添加到对应的 name 下
+        grouped[name].push({ variableName, unit, defaultValue, description });
+      });
+
+      this.groupedVariables = grouped;
     },
   },
 };
