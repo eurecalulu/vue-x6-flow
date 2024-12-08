@@ -44,43 +44,69 @@
           "
         >
           <!-- 工具按钮，调整样式和对齐 -->
-          <div style="display: flex; gap: 10px; align-items: center">
-            <el-tooltip content="项目" placement="bottom">
-              <i class="el-icon-menu" />
-            </el-tooltip>
-            <el-tooltip content="长按shift多选" placement="bottom">
-              <i class="el-icon-crop" />
-            </el-tooltip>
-            <el-tooltip content="放大" placement="bottom">
-              <i class="el-icon-zoom-in" @click="zoomFn(0.2)" />
-            </el-tooltip>
-            <el-tooltip content="缩小" placement="bottom">
-              <i class="el-icon-zoom-out" @click="zoomFn(-0.2)" />
-            </el-tooltip>
-            <el-tooltip content="适应屏幕" placement="bottom">
-              <i class="el-icon-full-screen" @click="centerFn" />
-            </el-tooltip>
-            <el-tooltip content="执行" placement="bottom">
-              <i class="el-icon-video-play" @click="startFn()" />
-            </el-tooltip>
-            <el-tooltip content="保存" placement="bottom">
-              <i class="el-icon-upload" @click="saveFn()" />
-            </el-tooltip>
-            <!--            <el-tooltip content="加载保存页面" placement="bottom">-->
-            <!--              <i class="el-icon-link" @click="loadFn()" />-->
-            <!--            </el-tooltip>-->
-            <el-tooltip content="是否禁用" placement="bottom">
-              <i
-                :class="{ 'el-icon-lock': isLock, 'el-icon-unlock': !isLock }"
-                @click="lockFn()"
-              />
-            </el-tooltip>
+          <div
+            style="
+              display: flex;
+              gap: 15px;
+              margin-left: 2px;
+              align-items: center;
+            "
+          >
+            <!-- 检查按钮 -->
+            <el-button
+              icon="el-icon-check"
+              size="mini"
+              type="default"
+              @click="checkFn"
+              style="font-size: 12px"
+            >
+              绑定信号
+            </el-button>
+            <!-- 编译按钮 -->
+            <el-button
+              icon="el-icon-refresh"
+              size="mini"
+              type="default"
+              @click="compileFn"
+              style="font-size: 12px"
+            >
+              检查
+            </el-button>
+            <el-button
+              icon="el-icon-caret-right"
+              size="mini"
+              type="default"
+              @click="runFn"
+              style="font-size: 12px"
+            >
+              编译
+            </el-button>
+            <el-button
+              icon="el-icon-video-play"
+              size="mini"
+              type="default"
+              @click="openSimulationConfig"
+              style="font-size: 12px"
+            >
+              运行
+            </el-button>
+            <!-- 下载按钮 -->
+            <el-button
+              icon="el-icon-upload"
+              size="mini"
+              type="default"
+              @click="saveFn"
+              style="font-size: 12px"
+            >
+              保存
+            </el-button>
           </div>
         </el-header>
 
         <!-- 标签页和画布 -->
         <el-main
-          style="height: calc(100vh - 200px); padding: 0; overflow: hidden"
+          :style="{ height: `calc(100vh - ${footerHeight}px - 85px)` }"
+          style="padding: 0; overflow: hidden"
         >
           <div @click.stop="hideFn">
             <el-tabs v-model="activeTab" type="card">
@@ -95,18 +121,30 @@
                 </div>
               </el-tab-pane>
             </el-tabs>
+            <SimuNodeDetailsModal
+              :visible.sync="isModalVisible"
+              :nodeData="selectedNodeData"
+              @update:visible="isModalVisible = false"
+              @submit="handleSubmit"
+            />
+            <SimulationConfigModal
+              :isVisible="isSimulationConfigModalVisible"
+              :configData="currentSimuConfig"
+              @close="closeCreateModal"
+              @submit="handleCreateOrUpdateConfig"
+            />
           </div>
         </el-main>
         <el-footer
-          height="5%"
-          style="
-            height: auto;
-            flex: 1;
-            background-color: #f7f7f7;
-            border-top: 1px solid #ddd;
-          "
+          :style="{
+            height: `${footerHeight}px`,
+            resize: 'vertical',
+            overflow: 'auto',
+            borderTop: '1px solid #ddd',
+          }"
+          @mousedown="startResize"
         >
-          <SimulationOutput />
+          <SimulationOutput ref="simulationOutput" />
         </el-footer>
       </el-container>
     </el-container>
@@ -120,8 +158,11 @@ import SimulationOutput from "./SimulationOutput.vue";
 // import DataJson from "./components/data";
 // import MenuBar from "./components/menuBar";
 // import Drawer from "./components/drawer";
-// import NodeDetailsModal from "./components/NodeDetailsModal.vue";
+import SimuNodeDetailsModal from "./SimuNodeDetailsModal.vue";
+import SimulationConfigModal from "./SimulationConfigModal.vue";
 import api from "../../api.js";
+// CreateProjectDialog from "@/views/projectManagement/CreateProjectDialog.vue";
+// import NodeDetailsModal from "@/views/diagramEditor/components/NodeDetailsModal.vue";
 // import { Transform } from "@antv/x6-plugin-transform";
 // import DialogCondition from "./components/dialog/condition.vue";
 // import DialogMysql from "./components/dialog/mysql.vue";
@@ -130,6 +171,8 @@ export default {
   name: "DiagramEditor",
   components: {
     SimulationOutput,
+    SimuNodeDetailsModal,
+    SimulationConfigModal,
   },
   data() {
     return {
@@ -158,6 +201,10 @@ export default {
       graphProperties: {},
       autoSaveInterval: null,
       displayName: null, // 模型名称
+      footerHeight: 180, // 初始高度
+      resizing: false, // 是否正在调整高度
+      isSimulationConfigModalVisible: false,
+      currentSimuConfig: null,
     };
   },
   props: ["diagramId", "modelId", "projectId"],
@@ -171,7 +218,7 @@ export default {
     },
   },
   mounted() {
-    console.log(document.getElementById("draw-cot"));
+    // console.log(document.getElementById("draw-cot"));
     this.fetchDisplayName();
     // 初始化 graph
     this.initGraph();
@@ -579,16 +626,6 @@ export default {
     },
     // end of initGraph
     async showNodeStatus(statusList) {
-      // const status = statusList.shift();
-      // status?.forEach((item) => {
-      //   const { id, status } = item;
-      //   const node = this.graph.getCellById(id);
-      //   // const data = node.getData();
-      //   // node.setData({
-      //   //   ...data,
-      //   //   status: status,
-      //   // });
-      // });
       this.timer = setTimeout(() => {
         this.showNodeStatus(statusList);
       }, 300);
@@ -624,8 +661,6 @@ export default {
     },
     startFn() {
       this.timer && clearTimeout(this.timer);
-      // this.init(item);
-      // this.showNodeStatus(Object.assign([], nodeStatusList));
       this.graph.centerContent();
     },
     createMenuFn() {},
@@ -739,6 +774,18 @@ export default {
       }
     },
 
+    checkFn() {
+      console.log("checkFn");
+    },
+
+    compileFn() {
+      console.log("compileFn");
+    },
+
+    runFn() {
+      console.log("runFn");
+    },
+
     async handleSubmit(nodeData) {
       console.log("提交的节点数据:", nodeData); // 检查数据结构
       try {
@@ -780,6 +827,54 @@ export default {
         }
       }
     },
+    startResize(event) {
+      this.resizing = true;
+      const startY = event.clientY;
+      const startHeight = this.footerHeight;
+
+      const onMouseMove = (e) => {
+        if (!this.resizing) return; // 确保正在拖拽时调整高度
+        const delta = startY - e.clientY; // 注意方向可能反了
+        this.footerHeight = Math.max(100, startHeight + delta); // 更新高度，限制最小值
+      };
+
+      const onMouseUp = () => {
+        this.resizing = false;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    },
+
+    closeCreateModal() {
+      this.isSimulationConfigModalVisible = false;
+    },
+    async handleCreateOrUpdateConfig(form) {
+      try {
+        if (form.id) {
+          console.log("提交的数据", form);
+          // 更新模型
+          // await this.updateProject(form);
+        } else {
+          console.log("提交的数据", form);
+          // await this.createProject({ ...form, diagramId });
+        }
+      } catch (error) {
+        this.$message.error(`操作失败：${error.message}`);
+      } finally {
+        this.closeCreateModal();
+      }
+    },
+    async openSimulationConfig() {
+      // const response = await api.queryProject(this.projectId);
+      // if (response.data.status === 200) {
+      //   this.currentSimuConfig = response.data.data;
+      //   this.isSimulationConfigModalVisible = true;
+      // }
+      this.isSimulationConfigModalVisible = true;
+    },
   },
 };
 </script>
@@ -804,7 +899,7 @@ export default {
   overflow: auto;
   width: 95%;
   margin: 0 auto;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 300px);
 }
 
 /* 工具栏按钮 hover 效果 */
@@ -832,7 +927,7 @@ header i {
 /* 边 hover 和选中效果 */
 .x6-edge:hover path:nth-child(2),
 .x6-edge-selected path:nth-child(2) {
-  stroke: #1890ff;
+  //stroke: #1890ff;
   stroke-width: 1.5px;
 }
 
@@ -881,5 +976,11 @@ header i {
 .el-icon-lock:hover,
 .el-icon-unlock:hover {
   color: #333333; /* 悬停时的深灰色效果 */
+}
+
+.el-footer {
+  resize: vertical;
+  overflow: auto;
+  cursor: ns-resize;
 }
 </style>

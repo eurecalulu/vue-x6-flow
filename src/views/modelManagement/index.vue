@@ -21,9 +21,13 @@
     <el-table :data="modelData" class="model-table">
       <el-table-column prop="name" label="模型名" sortable></el-table-column>
       <!-- 使用 el-tooltip 包裹 modelDescription -->
-      <el-table-column prop="type" label="模型类别" sortable></el-table-column>
       <el-table-column
-        prop="categoryId"
+        prop="modelType"
+        label="模型类别"
+        sortable
+      ></el-table-column>
+      <el-table-column
+        prop="category"
         label="模型目录"
         sortable
       ></el-table-column>
@@ -90,64 +94,7 @@ export default {
     return {
       modelSearchQuery: "",
       // selectedType: "",
-      modelData: [
-        {
-          name: "大金空调机理模型",
-          type: "空调机理模型",
-          properties: {
-            modelDescription: "大金空调机理模型",
-          },
-        },
-        {
-          name: "华电储能机理模型",
-          type: "储能机理模型",
-          properties: {
-            modelDescription: "华电储能机理模型",
-          },
-        },
-        {
-          name: "晶科太阳能模型",
-          type: "太阳能模型",
-          properties: {
-            modelDescription: "晶科太阳能模型",
-          },
-        },
-        {
-          name: "国电风力发电模型",
-          type: "风力发电模型",
-          properties: {
-            modelDescription: "国电风力发电模型",
-          },
-        },
-        {
-          name: "长江水利模型",
-          type: "水利模型",
-          properties: {
-            modelDescription: "长江水利模型",
-          },
-        },
-        {
-          name: "格力空调机理模型",
-          type: "空调机理模型",
-          properties: {
-            modelDescription: "格力空调机理模型",
-          },
-        },
-        {
-          name: "南方电网储能模型",
-          type: "储能机理模型",
-          properties: {
-            modelDescription: "南方电网储能模型",
-          },
-        },
-        {
-          name: "天合光能太阳能模型",
-          type: "太阳能模型",
-          properties: {
-            modelDescription: "天合光能太阳能模型",
-          },
-        },
-      ],
+      modelData: [],
       total: 8,
       pageSize: 8,
       isCreateModalVisible: false,
@@ -185,7 +132,12 @@ export default {
 
     async updateModel(form) {
       try {
-        const response = await api.updateModel(form);
+        // 根据 modelType 设置 type 字段
+        const type =
+          form.modelType === "控制单元" ? "controller" : "simulation";
+        // 将 type 添加到 modelData 中
+        const response = await api.updateModel({ ...form, type });
+        // const response = await api.updateModel(form);
         if (response.data.status === 200) {
           this.$message.success("更新模型成功");
         } else {
@@ -211,7 +163,11 @@ export default {
 
     async createModel(modelData) {
       try {
-        const response = await api.addModel(modelData);
+        // 根据 modelType 设置 type 字段
+        const type =
+          modelData.modelType === "控制单元" ? "controller" : "simulation";
+        // 将 type 添加到 modelData 中
+        const response = await api.addModel({ ...modelData, type });
         if (response.data.status === 201) {
           this.$message.success("新建模型成功");
         } else {

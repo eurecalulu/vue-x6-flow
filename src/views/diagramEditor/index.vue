@@ -316,9 +316,9 @@ export default {
             name: "", // 节点名字
             diagramId: "", // 所属图的 ID
             modelId: "", // 节点对应的模型类型
-            parameters: "", // 节点参数
-            inputs: "", // 输入
-            outputs: "", // 输出
+            parameters: [], // 节点参数
+            inputs: [], // 输入
+            outputs: [], // 输出
             scripts: "", // 脚本
             signals: "", // 信号
             properties: {}, // 其他属性信息（如颜色、大小等）
@@ -732,9 +732,9 @@ export default {
             name: node.data?.name || "", // 节点的名字
             diagramId: this.diagramId, // 节点所属的画面 ID
             modelId: this.modelId, // 节点对应的模型类型
-            parameters: node.data?.parameters || "", // 参数
-            inputs: node.data?.inputs || "", // 输入
-            outputs: node.data?.outputs || "", // 输出
+            parameters: node.data?.parameters || [], // 参数
+            inputs: node.data?.inputs || [], // 输入
+            outputs: node.data?.outputs || [], // 输出
             scripts: node.data?.scripts || "", // 脚本
             signals: node.data?.signals || "", // 信号
             properties: {
@@ -1001,9 +1001,9 @@ export default {
           name: label,
           diagramId: this.diagramId,
           modelId: this.modelId,
-          parameters: "",
-          inputs: "",
-          outputs: "",
+          parameters: [],
+          inputs: [],
+          outputs: [],
           scripts: "",
           signals: "",
           properties: {

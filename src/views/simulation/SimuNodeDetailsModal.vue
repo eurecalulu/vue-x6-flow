@@ -19,7 +19,7 @@
         >
           <!-- 节点基础属性 -->
           <div style="margin-bottom: 15%">
-            <h3>节点基础属性</h3>
+            <h3>参数</h3>
             <el-form-item label="节点 ID" class="form-item">
               <el-tooltip
                 :content="'完整ID: ' + localNodeData.id"
@@ -36,54 +36,19 @@
             </el-form-item>
           </div>
           <div>
-            <h3>业务属性</h3>
-            <div
-              v-if="
-                category === '处理单元' ||
-                category === '信号单元' ||
-                category === '控制单元'
-              "
-            >
-              <el-form-item label="参数配置" class="form-item">
-                <el-button
-                  class="detail-parameter-custom-button"
-                  size="small"
-                  icon="el-icon-edit"
-                  @click="openParametersConfig"
-                >
-                  配置
-                </el-button>
-              </el-form-item>
-              <!-- 输入参数配置 -->
-              <el-form-item label="输入参数" class="form-item">
-                <el-button
-                  class="detail-parameter-custom-button"
-                  size="small"
-                  icon="el-icon-edit"
-                  @click="openInputParameterConfig"
-                >
-                  配置
-                </el-button>
-              </el-form-item>
-              <!-- 输出参数配置 -->
-              <el-form-item label="输出参数" class="form-item">
-                <el-button
-                  class="detail-parameter-custom-button"
-                  size="small"
-                  icon="el-icon-edit"
-                  @click="openOutputParameterConfig"
-                >
-                  配置
-                </el-button>
-              </el-form-item>
-            </div>
-
+            <h3>仿真参数</h3>
             <div v-if="category === '处理单元'">
-              <el-form-item label="脚本" class="form-item">
+              <el-form-item label="采样数据最小间隔" class="form-item">
+                <el-input
+                  v-model="localNodeData.simpleDataMinInterval"
+                  placeholder="Parameter Real Un 额定功率"
+                ></el-input>
+              </el-form-item>
+              <el-form-item label="控制指令响应最小间隔" class="form-item">
                 <el-input
                   type="textarea"
                   :rows="3"
-                  v-model="localNodeData.scripts"
+                  v-model="localNodeData.controllerRespMinInterval"
                   placeholder="der(kWh) = P"
                 ></el-input>
               </el-form-item>
@@ -91,29 +56,60 @@
 
             <!-- 如果 category 为 '信号单元' -->
             <div v-else-if="category === '信号单元'">
-              <el-form-item label="脚本" class="form-item">
+              <el-form-item label="控制最小时间间隔" class="form-item">
                 <el-input
-                  type="textarea"
-                  :rows="3"
-                  v-model="localNodeData.scripts"
+                  v-model="localNodeData.controllerOrderMinInterval"
                   placeholder="Select Temperature from S where time=t"
                 ></el-input>
               </el-form-item>
             </div>
 
             <div v-else-if="category === '控制单元'">
-              <el-form-item label="信号绑定" class="form-item">
+              <el-form-item label="控制指令最小间隔" class="form-item">
                 <el-input
-                  type="textarea"
-                  :rows="3"
-                  v-model="localNodeData.signals"
+                  v-model="localNodeData.controllerOrderMinInterval"
+                  :placeholder="`设备号：11111
+温度信号：temp
+XX信号：XXX`"
+                ></el-input>
+              </el-form-item>
+              <el-form-item label="采样数据最小间隔" class="form-item">
+                <el-input
+                  v-model="localNodeData.simpleDataMinInterval"
                   :placeholder="`设备号：11111
 温度信号：temp
 XX信号：XXX`"
                 ></el-input>
               </el-form-item>
             </div>
+
+            <div
+              v-if="
+                category === '处理单元' ||
+                category === '信号单元' ||
+                category === '控制单元'
+              "
+            >
+              <el-form-item label="设备号" class="form-item">
+                <el-input
+                  v-model="localNodeData.signalsBindDeviceId"
+                  placeholder="XXX-XXX"
+                ></el-input>
+              </el-form-item>
+              <el-form-item label="信号绑定" class="form-item">
+                <el-button
+                  class="detail-parameter-custom-button"
+                  size="small"
+                  icon="el-icon-edit"
+                  @click="openSignalsBindConfig"
+                >
+                  信号绑定配置
+                </el-button>
+              </el-form-item>
+              <!-- 输出参数配置 -->
+            </div>
           </div>
+
           <!-- 按钮操作区 -->
           <div style="text-align: right; margin-top: 20px">
             <el-button @click="handleClose" class="cancel-button"
@@ -129,43 +125,23 @@ XX信号：XXX`"
         </el-form>
       </div>
     </div>
-    <!-- 输入参数配置弹窗 -->
-    <ParameterConfigModal
-      :visible="isParametersConfigVisible"
-      :parameters="localNodeData.parameters"
-      type="parameter"
-      @close="isParametersConfigVisible = false"
-      @update="updateParameters"
-      @update:visible="isParametersConfigVisible = $event"
-    />
-
-    <!-- 参数配置弹窗 -->
-    <ParameterConfigModal
-      :visible="isInputParameterConfigVisible"
-      :parameters="localNodeData.inputs"
-      type="input"
-      @close="isInputParameterConfigVisible = false"
-      @update="updateInputParameters"
-      @update:visible="isInputParameterConfigVisible = $event"
-    />
-
-    <!-- 输出参数配置弹窗 -->
-    <ParameterConfigModal
-      :visible="isOutputParameterConfigVisible"
-      :parameters="localNodeData.outputs"
-      type="output"
-      @close="isOutputParameterConfigVisible = false"
-      @update="updateOutputParameters"
-      @update:visible="isOutputParameterConfigVisible = $event"
+    <signal-bind-config
+      :visible="isSignalsBindConfigVisible"
+      :signalsBindData="localNodeData.signalsBindParam"
+      @update-signals-bind="updateSignalsBind"
+      @update:visible="isSignalsBindConfigVisible = $event"
     />
   </el-drawer>
 </template>
 
 <script>
-import ParameterConfigModal from "./ParameterConfigModal.vue";
+import SignalBindConfig from "./SignalBindConfig.vue";
+
 export default {
-  name: "NodeDetailsModal",
-  components: { ParameterConfigModal },
+  name: "SimuNodeDetailsModal",
+  components: {
+    SignalBindConfig,
+  },
   props: {
     visible: {
       type: Boolean,
@@ -179,9 +155,7 @@ export default {
   data() {
     return {
       localNodeData: this.nodeData, // 深拷贝，防止修改 props
-      isParametersConfigVisible: false, // 控制参数配置弹窗的显示
-      isInputParameterConfigVisible: false, // 控制输入参数配置弹窗的显示
-      isOutputParameterConfigVisible: false, // 控制输出参数配置弹窗的显示
+      isSignalsBindConfigVisible: false, // 控制信号绑定弹窗的显示
       rules: {},
     };
   },
@@ -209,23 +183,11 @@ export default {
       this.$emit("submit", this.localNodeData); // 通过 $emit 发送数据给父组件
       this.handleClose(); // 关闭抽屉
     },
-    openParametersConfig() {
-      this.isParametersConfigVisible = true;
+    openSignalsBindConfig() {
+      this.isSignalsBindConfigVisible = true;
     },
-    updateParameters(newParameters) {
-      this.localNodeData.parameters = newParameters; // 更新参数数据
-    },
-    openInputParameterConfig() {
-      this.isInputParameterConfigVisible = true;
-    },
-    updateInputParameters(newParameters) {
-      this.localNodeData.inputs = newParameters; // 更新输入参数数据
-    },
-    openOutputParameterConfig() {
-      this.isOutputParameterConfigVisible = true;
-    },
-    updateOutputParameters(newParameters) {
-      this.localNodeData.outputs = newParameters; // 更新输出参数数据
+    updateSignalsBind(newParameters) {
+      this.localNodeData.signalsBindParam = newParameters; // 更新参数数据
     },
   },
 };

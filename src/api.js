@@ -148,7 +148,7 @@ export default {
     return apiClient.post("/simgui/project/queryList");
   },
   queryProjectPageList(data) {
-    return apiClient.post("/simgui/project/queryPageList", data);
+    return apiClient.post("/simgui/project/queryList", data);
   },
 
   // === Category APIs ===

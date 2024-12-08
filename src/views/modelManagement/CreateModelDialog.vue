@@ -16,12 +16,12 @@
       <el-form-item label="模型名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入模型名称"></el-input>
       </el-form-item>
-      <el-form-item label="目录" prop="categoryId">
-        <el-input v-model="form.categoryId" placeholder="请输入目录"></el-input>
+      <el-form-item label="目录" prop="category">
+        <el-input v-model="form.category" placeholder="请输入目录"></el-input>
       </el-form-item>
-      <el-form-item label="类型" prop="type">
+      <el-form-item label="类型" prop="modelType">
         <el-select
-          v-model="form.type"
+          v-model="form.modelType"
           placeholder="请选择类型"
           style="width: 100%"
         >
@@ -91,20 +91,19 @@ export default {
     return {
       form: {
         name: "",
-        categoryId: "",
-        type: "",
+        category: "",
+        modelType: "",
         iconId: "",
-        modelOption: "",
         properties: {
           modelDescription: "", // 默认的 modelDescription 字段
         },
       },
       rules: {
         name: [{ required: true, message: "请输入模型名称", trigger: "blur" }],
-        categoryId: [
-          { required: true, message: "请输入目录", trigger: "blur" },
+        category: [{ required: true, message: "请输入目录", trigger: "blur" }],
+        modelType: [
+          { required: true, message: "请选择类型", trigger: "change" },
         ],
-        type: [{ required: true, message: "请选择类型", trigger: "change" }],
         iconId: [{ required: true, message: "请输入图标", trigger: "blur" }],
       },
       selectedIcon: {
@@ -142,10 +141,9 @@ export default {
     resetForm() {
       this.form = {
         name: "",
-        categoryId: "",
-        type: "",
+        category: "",
+        modelType: "",
         iconId: "",
-        modelOption: "",
         properties: {
           modelDescription: "", // 重置 modelDescription
         },

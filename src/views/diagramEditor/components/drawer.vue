@@ -59,35 +59,35 @@ export default {
         {
           label: "矩形",
           type: "基础组件",
-          categoryId: "基础组件",
+          category: "基础组件",
           shape: "rect",
           icon: require("@/assets/svg/rect.svg"),
         },
         {
           label: "圆形",
           type: "基础组件",
-          categoryId: "基础组件",
+          category: "基础组件",
           shape: "circle",
           icon: require("@/assets/svg/circle.svg"),
         },
         {
           label: "椭圆",
           type: "基础组件",
-          categoryId: "基础组件",
+          category: "基础组件",
           shape: "ellipse",
           icon: require("@/assets/svg/ellipse.svg"),
         },
         {
           label: "总线（水平）",
           type: "基础组件",
-          categoryId: "基础组件",
+          category: "基础组件",
           shape: "straight-line-horizontal",
           icon: require("@/assets/svg/straight-line.svg"),
         },
         {
           label: "总线（竖直）",
           type: "基础组件",
-          categoryId: "基础组件",
+          category: "基础组件",
           shape: "straight-line-vertical",
           icon: require("@/assets/svg/straight-line.svg"),
         },
@@ -103,20 +103,7 @@ export default {
     // this.initializeCategoryState();
   },
   methods: {
-    drag: function () {
-      // const parentRect = document
-      //   .getElementById("container")
-      //   .getBoundingClientRect();
-      // let mouseInGrid = false;
-      // if (
-      //   mouseXY.x > parentRect.left &&
-      //   mouseXY.x < parentRect.right &&
-      //   mouseXY.y > parentRect.top &&
-      //   mouseXY.y < parentRect.bottom
-      // ) {
-      //   mouseInGrid = true;
-      // }
-    },
+    drag: function () {},
 
     dragend(item, event) {
       // Emit 绝对坐标
@@ -172,20 +159,20 @@ export default {
         // 格式化模型数据
         this.modelList = filteredModels.map((model) => ({
           label: model.name,
-          type: model.type || "未分类",
-          categoryId: model.categoryId || "未分组",
+          type: model.modelType || "未分类",
+          category: model.category || "未分组",
           icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
           shape: "custom-model",
         }));
 
         // 格式化模型数据
-        this.modelList = filteredModels.map((model) => ({
-          label: model.name,
-          type: model.type || "未分类",
-          categoryId: model.categoryId || "未分组",
-          icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
-          shape: "custom-model",
-        }));
+        // this.modelList = filteredModels.map((model) => ({
+        //   label: model.name,
+        //   type: model.type || "未分类",
+        //   category: model.category || "未分组",
+        //   icon: this.iconCache[model.iconId] || "/img/default-icon.svg", // 使用缓存中的 Base64 数据
+        //   shape: "custom-model",
+        // }));
 
         // console.log("Model List with Icons:", this.modelList);
 
@@ -201,7 +188,7 @@ export default {
     categorizeComponents(components) {
       const categorized = {};
       components.forEach((component) => {
-        const type = component.categoryId || "未分组";
+        const type = component.category || "未分组";
         if (!categorized[type]) {
           categorized[type] = [];
         }
@@ -236,6 +223,7 @@ export default {
   },
 };
 </script>
+
 <style lang="less" scoped>
 .fixed-sidebar {
   width: 100%;

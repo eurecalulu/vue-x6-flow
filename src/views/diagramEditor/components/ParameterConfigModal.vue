@@ -3,7 +3,7 @@
     v-dialog-drag
     :visible.sync="localVisible"
     :title="dialogTitle"
-    width="80%"
+    width="96%"
     :modal="false"
     class="custom-inner-modal"
     @close="handleClose"
@@ -34,17 +34,17 @@
       </el-table-column>
       <el-table-column prop="defaultValue" label="缺省值">
         <template #default="scope">
-          <el-input-number
+          <el-input
             v-model="scope.row.defaultValue"
             placeholder="缺省值"
             size="mini"
-          ></el-input-number>
+          ></el-input>
         </template>
       </el-table-column>
-      <el-table-column prop="type" label="参数类别">
+      <el-table-column prop="parameterCategory" label="参数类别">
         <template #default="scope">
           <el-select
-            v-model="scope.row.type"
+            v-model="scope.row.parameterCategory"
             placeholder="选择类别"
             size="mini"
           >
@@ -54,10 +54,10 @@
           </el-select>
         </template>
       </el-table-column>
-      <el-table-column prop="otherType" label="其他类别">
+      <el-table-column prop="otherCategory" label="其他类别">
         <template #default="scope">
           <el-select
-            v-model="scope.row.otherType"
+            v-model="scope.row.otherCategory"
             placeholder="选择类别"
             size="mini"
           >
@@ -67,10 +67,10 @@
           </el-select>
         </template>
       </el-table-column>
-      <el-table-column prop="maxValue" label="取值上限">
+      <el-table-column prop="upperLimit" label="取值上限">
         <template #default="scope">
           <el-input-number
-            v-model="scope.row.maxValue"
+            v-model="scope.row.upperLimit"
             placeholder="无"
             style="width: 90%"
             size="mini"
@@ -78,10 +78,10 @@
         </template>
       </el-table-column>
 
-      <el-table-column prop="minValue" label="取值下限">
+      <el-table-column prop="lowerLimit" label="取值下限">
         <template #default="scope">
           <el-input-number
-            v-model="scope.row.minValue"
+            v-model="scope.row.lowerLimit"
             placeholder="无"
             style="width: 90%"
             size="mini"
@@ -89,10 +89,10 @@
         </template>
       </el-table-column>
 
-      <el-table-column prop="helperContent" label="帮助内容">
+      <el-table-column prop="description" label="帮助内容">
         <template #default="scope">
           <el-input
-            v-model="scope.row.helperContent"
+            v-model="scope.row.description"
             placeholder="帮助内容"
             style="width: 90%"
             size="mini"
@@ -141,7 +141,7 @@ export default {
     },
     parameters: {
       type: Array,
-      default: () => [], // TODO json对象还是数组？
+      default: () => [],
     },
     type: {
       // 用于区分是输入参数还是输出参数
@@ -200,11 +200,11 @@ export default {
         name: "",
         unit: "",
         defaultValue: null,
-        type: "浮点数",
-        otherType: "无",
-        maxValue: null,
-        minValue: null,
-        helperContent: "",
+        parameterCategory: "浮点数",
+        otherCategory: "无",
+        upperLimit: null,
+        lowerLimit: null,
+        description: "",
       });
     },
     removeParameter(index) {
