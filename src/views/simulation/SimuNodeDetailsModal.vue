@@ -37,11 +37,11 @@
           </div>
           <div>
             <h3>仿真参数</h3>
-            <div v-if="category === '处理单元'">
+            <div v-if="category === '处理单元' || category === '全局单元'">
               <el-form-item label="采样数据最小间隔" class="form-item">
                 <el-input
                   v-model="localNodeData.simpleDataMinInterval"
-                  placeholder="Parameter Real Un 额定功率"
+                  placeholder=""
                 ></el-input>
               </el-form-item>
               <el-form-item label="控制指令响应最小间隔" class="form-item">
@@ -49,7 +49,7 @@
                   type="textarea"
                   :rows="3"
                   v-model="localNodeData.controllerRespMinInterval"
-                  placeholder="der(kWh) = P"
+                  placeholder=""
                 ></el-input>
               </el-form-item>
             </div>
@@ -59,7 +59,7 @@
               <el-form-item label="控制最小时间间隔" class="form-item">
                 <el-input
                   v-model="localNodeData.controllerOrderMinInterval"
-                  placeholder="Select Temperature from S where time=t"
+                  placeholder=""
                 ></el-input>
               </el-form-item>
             </div>
@@ -68,17 +68,11 @@
               <el-form-item label="控制指令最小间隔" class="form-item">
                 <el-input
                   v-model="localNodeData.controllerOrderMinInterval"
-                  :placeholder="`设备号：11111
-温度信号：temp
-XX信号：XXX`"
                 ></el-input>
               </el-form-item>
               <el-form-item label="采样数据最小间隔" class="form-item">
                 <el-input
                   v-model="localNodeData.simpleDataMinInterval"
-                  :placeholder="`设备号：11111
-温度信号：temp
-XX信号：XXX`"
                 ></el-input>
               </el-form-item>
             </div>
@@ -87,7 +81,8 @@ XX信号：XXX`"
               v-if="
                 category === '处理单元' ||
                 category === '信号单元' ||
-                category === '控制单元'
+                category === '控制单元' ||
+                category === '全局单元'
               "
             >
               <el-form-item label="设备号" class="form-item">

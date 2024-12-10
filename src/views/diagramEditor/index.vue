@@ -461,7 +461,6 @@ export default {
             scripts: "", // 脚本
             signals: "", // 信号
             properties: {}, // 其他属性信息（如颜色、大小等）
-            modelType: "",
           },
           markup: [
             {
@@ -930,11 +929,15 @@ export default {
             outputs: node.data?.outputs || [], // 输出
             scripts: node.data?.scripts || "", // 脚本
             signals: node.data?.signals || "", // 信号
+            // 动态包含所有 data 字段，防止遗漏
+            ...node.data,
             properties: {
               category: node.data?.properties?.category,
               position: node.position, // 节点位置
               shape: node.shape, // 节点形状
               attrs: node.attrs, // 属性信息（如颜色、大小等）
+              // 动态包含属性中的其他字段
+              ...node.data?.properties,
             },
           }));
 
@@ -946,8 +949,12 @@ export default {
             diagramId: this.diagramId, // 连接线所属的画面 ID
             sourceNodeId: edge.source.cell || "", // 起始节点 ID
             targetNodeId: edge.target.cell || "", // 终到节点 ID
+            // 动态包含所有 data 字段，防止遗漏
+            ...edge.data,
             properties: {
               attrs: edge.attrs, // 属性信息（如颜色、线宽等）
+              // 动态包含属性中的其他字段
+              ...edge.data?.properties,
             },
           }));
         await Promise.all([
@@ -1139,6 +1146,15 @@ export default {
           properties: {
             category: controllerNodeCategory,
           },
+          simuParameters: {},
+          simuInputs: {},
+          simuOutputs: {},
+          controllerMinInterval: 0,
+          controllerOrderMinInterval: 0,
+          simpleDataMinInterval: 0,
+          controllerRespMinInterval: 0,
+          signalsBindDeviceId: "",
+          signalsBindParam: {},
           number: nodeCount,
         },
         attrs: {
@@ -1232,6 +1248,15 @@ export default {
           properties: {
             category: type,
           },
+          simuParameters: {},
+          simuInputs: {},
+          simuOutputs: {},
+          controllerMinInterval: 0,
+          controllerOrderMinInterval: 0,
+          simpleDataMinInterval: 0,
+          controllerRespMinInterval: 0,
+          signalsBindDeviceId: "",
+          signalsBindParam: {},
         },
         attrs: {
           image: {

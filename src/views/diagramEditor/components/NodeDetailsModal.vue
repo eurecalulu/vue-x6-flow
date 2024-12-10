@@ -41,7 +41,8 @@
               v-if="
                 category === '处理单元' ||
                 category === '信号单元' ||
-                category === '控制单元'
+                category === '控制单元' ||
+                category === '全局单元'
               "
             >
               <el-form-item label="参数配置" class="form-item">
@@ -78,7 +79,7 @@
               </el-form-item>
             </div>
 
-            <div v-if="category === '处理单元'">
+            <div v-if="category === '处理单元' || category === '全局单元'">
               <el-form-item label="脚本" class="form-item">
                 <el-input
                   type="textarea"

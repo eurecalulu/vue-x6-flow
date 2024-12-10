@@ -228,6 +228,7 @@ export default {
       await this.$router.push({
         name: "simulation",
         params: { diagramId, projectId },
+        replace: false, // 确保不会替换历史记录
       });
     },
   },

@@ -28,6 +28,7 @@
           <el-option label="处理单元" value="处理单元"></el-option>
           <el-option label="信号单元" value="信号单元"></el-option>
           <el-option label="控制单元" value="控制单元"></el-option>
+          <el-option label="全局单元" value="全局单元"></el-option>
         </el-select>
       </el-form-item>
       <!--      <el-form-item label="图标" prop="iconId">-->

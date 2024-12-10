@@ -199,6 +199,11 @@ export default {
           fillColor: "#f5f5f5",
           lineWidth: 2,
         },
+        controllerMinInterval: 0,
+        controllerOrderMinInterval: 0,
+        controllerRespMinInterval: 0,
+        signalsBindDeviceId: "",
+        signalsBindParam: {},
       },
       graphProperties: {},
       autoSaveInterval: null,
@@ -361,13 +366,21 @@ export default {
             name: "", // 节点名字
             diagramId: "", // 所属图的 ID
             modelId: "", // 节点对应的模型类型
-            parameters: "", // 节点参数
-            inputs: "", // 输入
-            outputs: "", // 输出
+            parameters: [], // 节点参数
+            inputs: [], // 输入
+            outputs: [], // 输出
             scripts: "", // 脚本
             signals: "", // 信号
             properties: {}, // 其他属性信息（如颜色、大小等）
-            modelType: "",
+            simuParameters: {},
+            simuInputs: {},
+            simuOutputs: {},
+            controllerMinInterval: 0,
+            controllerOrderMinInterval: 0,
+            simpleDataMinInterval: 0,
+            controllerRespMinInterval: 0,
+            signalsBindDeviceId: "",
+            signalsBindParam: {},
           },
           markup: [
             {
@@ -669,11 +682,15 @@ export default {
             outputs: node.data?.outputs || "", // 输出
             scripts: node.data?.scripts || "", // 脚本
             signals: node.data?.signals || "", // 信号
+            // 动态包含所有 data 字段，防止遗漏
+            ...node.data,
             properties: {
               category: node.data?.properties?.category,
               position: node.position, // 节点位置
               shape: node.shape, // 节点形状
               attrs: node.attrs, // 属性信息（如颜色、大小等）
+              // 动态包含属性中的其他字段
+              ...node.data?.properties,
             },
           }));
 
@@ -685,8 +702,12 @@ export default {
             diagramId: this.diagramId, // 连接线所属的画面 ID
             sourceNodeId: edge.source.cell || "", // 起始节点 ID
             targetNodeId: edge.target.cell || "", // 终到节点 ID
+            // 动态包含所有 data 字段，防止遗漏
+            ...edge.data,
             properties: {
               attrs: edge.attrs, // 属性信息（如颜色、线宽等）
+              // 动态包含属性中的其他字段
+              ...edge.data?.properties,
             },
           }));
         await Promise.all([
@@ -712,7 +733,7 @@ export default {
         let outputLog = response.data.data;
 
         if (response.data.message === "success" && response.data.data == null) {
-          outputLog = "检查非常成功";
+          outputLog = "检查成功";
         }
         // 通过ref调用子组件的方法，更新outputLog并切换标签页
         this.$refs.simulationOutput.updateOutputLog(outputLog);
@@ -733,7 +754,7 @@ export default {
         let outputLog = response.data.data;
 
         if (response.data.message === "success" && response.data.data == null) {
-          outputLog = "编译非常成功";
+          outputLog = "编译成功";
         }
         // 通过ref调用子组件的方法，更新outputLog并切换标签页
         this.$refs.simulationOutput.updateCompileOutput(outputLog);
