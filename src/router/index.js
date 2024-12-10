@@ -27,6 +27,14 @@ const routes = [
             /* webpackChunkName: "projectManagement" */ "@/views/projectManagement"
           ),
       },
+      {
+        path: "gatewayManagement",
+        name: "gatewayManagement",
+        component: () =>
+          import(
+            /* webpackChunkName: "projectManagement" */ "@/views/gatewayManagement"
+          ),
+      },
     ],
   },
   {

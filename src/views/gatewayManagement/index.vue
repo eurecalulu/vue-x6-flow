@@ -3,50 +3,36 @@
     <!-- 搜索栏 -->
     <el-row :gutter="20" class="search-bar">
       <el-col :span="6">
-        <el-input v-model="searchKey" placeholder="项目搜索"></el-input>
+        <el-input v-model="searchKey" placeholder="网关机搜索"></el-input>
       </el-col>
       <el-col :span="2">
         <el-button class="gray-button" type="primary" @click="handleSearch"
           >搜索</el-button
         >
       </el-col>
-      <el-col :span="4" :offset="8" class="create-project">
+      <el-col :span="4" :offset="8" class="create-gateway">
         <el-button class="gray-button" type="success" @click="openCreateModal"
-          >新建项目</el-button
+          >添加网关机</el-button
         >
       </el-col>
     </el-row>
-    <el-table :data="projectList" class="project-table">
-      <el-table-column label="项目名称" prop="name" />
-      <el-table-column label="项目说明" width="200">
-        <template v-slot="scope">
-          <el-tooltip
-            class="item"
-            effect="dark"
-            :content="scope.row.properties?.projectDescription || '暂无描述'"
-            placement="top"
-            :popper-class="'custom-tooltip'"
-          >
-            <span class="truncate-text">{{
-              scope.row.properties?.projectDescription || "暂无描述"
-            }}</span>
-          </el-tooltip>
+    <el-table :data="gatewayList" class="gateway-table">
+      <el-table-column label="网关机名称" prop="name" />
+      <el-table-column label="网关机IP" prop="ipAddress" />
+      <el-table-column label="网关机端口" prop="port" />
+      <el-table-column label="网关机状态">
+        <template slot-scope="scope">
+          <span v-if="scope.row.communicationStatus">健康</span>
+          <span v-else>下线</span>
         </template>
       </el-table-column>
-      <el-table-column label="绑定网关机ID" prop="gatewayId" width="180" />
       <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-link @click="editProject(scope.row)">编辑</el-link>
-          <el-divider direction="vertical"></el-divider>
-          <el-link @click="openDiagramEditor(scope.row)">设计</el-link>
-          <el-divider direction="vertical"></el-divider>
-          <el-link @click="openSimulation(scope.row)">仿真</el-link>
-          <el-divider direction="vertical"></el-divider>
-          <el-link @click="exportStrategy(scope.row)">策略下发</el-link>
+          <el-link @click="editGateway(scope.row)">编辑</el-link>
           <el-divider direction="vertical"></el-divider>
           <el-link
             class="low-saturation-danger"
-            @click="deleteProject(scope.row)"
+            @click="deleteGateway(scope.row)"
             >删除</el-link
           >
         </template>
@@ -63,60 +49,52 @@
     ></el-pagination>
 
     <!-- 使用 CreateProjectDialog 组件 -->
-    <CreateProjectDialog
+    <CreateGatewayDialog
       :isVisible="isCreateModalVisible"
-      :projectData="currentProject"
+      :gatewayData="currentGateway"
       @close="closeCreateModal"
-      @submit="handleCreateOrUpdateProject"
+      @submit="handleCreateOrUpdateGateway"
     />
   </div>
 </template>
 
 <script>
 import api from "@/api"; // 导入 API 模块
-import CreateProjectDialog from "./CreateProjectDialog.vue"; // 引入 CreateProjectDialog 组件
+import CreateGatewayDialog from "./CreateGatewayDialog.vue"; // 引入 CreateProjectDialog 组件
 
 export default {
-  name: "ProjectManagementIndex",
+  name: "GatewayManagementIndex",
   components: {
-    CreateProjectDialog,
+    CreateGatewayDialog,
   },
   data() {
     return {
       searchKey: "", // 搜索关键字
-      projectList: [], // 项目列表
+      gatewayList: [], // 项目列表
       isCreateModalVisible: false,
       total: 8,
       pageSize: 8,
       currentPage: 1,
-      currentProject: null,
+      currentGateway: null,
     };
   },
   mounted() {
-    this.fetchProjectList();
+    this.fetchGatewayList();
   },
   methods: {
-    editProperties(data) {
-      console.log(data);
-    },
-    exportStrategy(data) {
-      console.log(data);
-    },
     handleSearch() {
-      this.fetchModelList();
+      this.fetchGatewayList();
     },
-    async handleCreateOrUpdateProject(form) {
+    async handleCreateOrUpdateGateway(form) {
       try {
         if (form.id) {
           // 更新模型
-          await this.updateProject(form);
+          await this.updateGateway(form);
         } else {
-          // 创建 diagram，并将其关联到新模型
-          const diagramId = await this.createDiagram(form.name);
           // 新建模型并包含 diagramId
-          await this.createProject({ ...form, diagramId });
+          await this.createGateway(form);
         }
-        this.fetchProjectList();
+        this.fetchGatewayList();
       } catch (error) {
         this.$message.error(`操作失败：${error.message}`);
       } finally {
@@ -124,16 +102,16 @@ export default {
       }
     },
 
-    async updateProject(form) {
+    async updateGateway(form) {
       try {
-        const response = await api.updateProject(form);
+        const response = await api.updateGateway(form);
         if (response.data.status === 200) {
-          this.$message.success("更新项目成功");
+          this.$message.success("更新网关机成功");
         } else {
-          throw new Error("更新项目失败");
+          throw new Error("更新网关机失败");
         }
       } catch (error) {
-        throw new Error(`更新项目请求失败：${error.message}`);
+        throw new Error(`更新网关机请求失败：${error.message}`);
       }
     },
 
@@ -150,67 +128,64 @@ export default {
       }
     },
 
-    async createProject(modelData) {
+    async createGateway(modelData) {
       try {
-        const response = await api.addProject(modelData);
-        if (response.data.status === 201) {
-          this.$message.success("新建项目成功");
+        const response = await api.addGateway(modelData);
+        if (response.data.status === 200) {
+          this.$message.success("添加网关机成功");
         } else {
-          throw new Error("新建项目失败");
+          throw new Error("添加网关机失败");
         }
       } catch (error) {
-        throw new Error(`新建项目请求失败：${error.message}`);
+        throw new Error(`添加网关机请求失败：${error.message}`);
       }
     },
 
-    async editProject(row) {
-      const response = await api.queryProject(row.id);
+    async editGateway(row) {
+      const response = await api.queryGateway(row.id);
       if (response.data.status === 200) {
-        this.currentProject = response.data.data;
+        this.currentGateway = response.data.data;
         this.isCreateModalVisible = true;
       }
     },
-    async deleteProject(row) {
+    async deleteGateway(row) {
       try {
-        await this.$confirm("确认删除该项目吗？", "提示", {
+        await this.$confirm("确认删除该网关机吗？", "提示", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning",
         });
-        const response = await api.deleteProject(row.id);
+        const response = await api.deleteGateway(row.id);
         if (response.data.status === 200) {
-          this.$message.success("删除项目成功");
-          this.fetchProjectList();
+          this.$message.success("删除网关机成功");
+          this.fetchGatewayList();
         }
       } catch (error) {
-        this.$message.error("删除项目失败");
+        this.$message.error("删除网关机失败");
       }
     },
-    async fetchProjectList() {
+    async fetchGatewayList() {
       const data = {
         currentPage: this.currentPage,
         pageSize: this.pageSize,
         searchKey: this.searchKey,
       };
-      const response = await api.queryProjectPageList(data);
+      const response = await api.queryGatewayList(data);
       if (response.data.status === 200) {
-        this.projectList = response.data.data.records; // 确保传递给 ElTable 的数据是数组
+        this.gatewayList = response.data.data.records; // 确保传递给 ElTable 的数据是数组
         this.total = response.data.data.total; // 设置总条目数用于分页
       }
     },
     handlePageChange(page) {
       this.currentPage = page;
-      this.fetchProjectList();
+      this.fetchGatewayList();
     },
     openCreateModal() {
-      this.currentProject = null;
+      this.currentGateway = null;
       this.isCreateModalVisible = true;
     },
     closeCreateModal() {
       this.isCreateModalVisible = false;
-    },
-    exportPolicy() {
-      console.log("export model");
     },
     async openDiagramEditor(row) {
       let diagramId = row.diagramId;
@@ -248,10 +223,10 @@ export default {
 .search-bar {
   margin-bottom: 20px;
 }
-.create-project {
+.create-gateway {
   text-align: right;
 }
-.project-table {
+.gateway-table {
   width: 100%;
   margin-top: 20px;
   margin-bottom: 50px;

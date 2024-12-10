@@ -16,11 +16,20 @@
       <el-form-item label="工程名称" prop="name">
         <el-input v-model="form.name" placeholder="请输入工程名称"></el-input>
       </el-form-item>
-      <el-form-item label="绑定网关机" prop="gatewayId">
-        <el-input
+      <el-form-item label="绑定网关机" prop="name">
+        <el-select
           v-model="form.gatewayId"
-          placeholder="请输入绑定网关机"
-        ></el-input>
+          placeholder="请选择绑定网关机"
+          :filterable="true"
+          :clearable="true"
+        >
+          <el-option
+            v-for="gateway in gatewayOptions"
+            :key="gateway.id"
+            :label="gateway.name"
+            :value="gateway.id"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="项目说明" prop="projectDescription">
         <el-input
@@ -39,6 +48,8 @@
 </template>
 
 <script>
+import api from "@/api";
+
 export default {
   props: {
     isVisible: {
@@ -65,7 +76,11 @@ export default {
           { required: true, message: "请输入绑定网关机", trigger: "blur" },
         ],
       },
+      gatewayOptions: [], // 用于存储网关机选项的数据
     };
+  },
+  created() {
+    this.fetchGatewayOptions(); // 在组件加载时获取网关机列表
   },
   watch: {
     projectData: {
@@ -84,6 +99,26 @@ export default {
     },
   },
   methods: {
+    async fetchGatewayOptions() {
+      try {
+        const data = {
+          currentPage: 1,
+          pageSize: null,
+          searchKey: null,
+        };
+        const response = await api.queryGatewayList(data);
+        console.log("Response:", response);
+
+        this.gatewayOptions = response.data?.data?.map((gateway) => ({
+          id: gateway.id,
+          name: gateway.name,
+        }));
+        console.log("gatewayOptions", this.gatewayOptions);
+      } catch (error) {
+        console.error("获取网关机列表失败：", error);
+      }
+    },
+
     handleClose() {
       this.resetForm();
       this.$emit("close");

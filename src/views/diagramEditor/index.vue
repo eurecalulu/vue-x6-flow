@@ -189,10 +189,10 @@ export default {
         name: "生成器",
         label: "生成器",
         scripts: "",
+        controllerNodeType: "",
         properties: {
           fillColor: "#f5f5f5",
           lineWidth: 2,
-          category: "中间节点",
         },
       },
       isControllerEdgeModalVisible: false,
@@ -450,7 +450,6 @@ export default {
             },
           },
           data: {
-            type: "custom-node", // 定义节点的类型
             // id: "", // 节点 ID
             name: "", // 节点名字
             diagramId: "", // 所属图的 ID
@@ -1156,6 +1155,7 @@ export default {
           signalsBindDeviceId: "",
           signalsBindParam: {},
           number: nodeCount,
+          type: this.diagramType,
         },
         attrs: {
           body: {
@@ -1257,6 +1257,7 @@ export default {
           controllerRespMinInterval: 0,
           signalsBindDeviceId: "",
           signalsBindParam: {},
+          type: this.diagramType,
         },
         attrs: {
           image: {

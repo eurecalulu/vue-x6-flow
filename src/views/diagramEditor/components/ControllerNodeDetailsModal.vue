@@ -28,12 +28,12 @@
             </el-form-item>
             <el-form-item label="节点类型" class="form-item">
               <el-select
-                v-model="localControllerNodeData.properties.category"
+                v-model="localControllerNodeData.controllerNodeType"
                 placeholder="请选择节点类型"
               >
-                <el-option label="起始节点" value="start"></el-option>
-                <el-option label="中间节点" value="middle"></el-option>
-                <el-option label="结束节点" value="end"></el-option>
+                <el-option label="起始节点" value="起始节点"></el-option>
+                <el-option label="中间节点" value="中间节点"></el-option>
+                <el-option label="结束节点" value="结束节点"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="节点功能脚本" class="form-item">
@@ -79,21 +79,9 @@ export default {
     return {
       localControllerNodeData: {
         ...this.nodeData,
-        properties: {
-          ...this.nodeData.properties,
-          category: this.nodeData.properties?.category || "", // 确保 category 存在
-        },
       },
       rules: {},
     };
-  },
-  computed: {
-    category() {
-      return this.localControllerNodeData &&
-        this.localControllerNodeData.properties
-        ? this.localControllerNodeData.properties.category
-        : "";
-    },
   },
   watch: {
     nodeData: {

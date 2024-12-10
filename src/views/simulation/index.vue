@@ -361,7 +361,7 @@ export default {
             },
           },
           data: {
-            type: "custom-node", // 定义节点的类型
+            type: "simulation", // 定义节点的类型
             // id: "", // 节点 ID
             name: "", // 节点名字
             diagramId: "", // 所属图的 ID

@@ -33,6 +33,7 @@
         >
           <el-menu-item index="/modelManagement">模型管理</el-menu-item>
           <el-menu-item index="/projectManagement">项目管理</el-menu-item>
+          <el-menu-item index="/gatewayManagement">网关机管理</el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -41,6 +42,7 @@
         <!-- 根据 activeMenu 渲染不同的内容 -->
         <ModelManagementIndex v-if="activeMenu === 'modelManagement'" />
         <ProjectManagementIndex v-if="activeMenu === 'projectManagement'" />
+        <GatewayManagementIndex v-if="activeMenu === 'gatewayManagement'" />
       </el-main>
     </el-container>
   </el-container>
@@ -49,12 +51,14 @@
 <script>
 import ModelManagementIndex from "./modelManagement/index.vue";
 import ProjectManagementIndex from "./projectManagement/index.vue";
+import GatewayManagementIndex from "./gatewayManagement/index.vue";
 
 export default {
   name: "mainPage",
   components: {
     ModelManagementIndex,
     ProjectManagementIndex,
+    GatewayManagementIndex,
   },
   computed: {
     // 动态绑定 activeMenu 为当前路由路径

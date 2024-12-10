@@ -212,4 +212,21 @@ export default {
   queryConnectionOfNode(nodeId) {
     return apiClient.post(`/simgui/connection/query/${nodeId}`);
   },
+
+  // === Gateway APIs ===
+  addGateway(data) {
+    return apiClient.post("/simgui/gateway/add", data);
+  },
+  updateGateway(data) {
+    return apiClient.post("/simgui/gateway/update", data);
+  },
+  deleteGateway(gatewayId) {
+    return apiClient.post(`/simgui/gateway/delete/${gatewayId}`);
+  },
+  queryGateway(gatewayId) {
+    return apiClient.post(`/simgui/gateway/query/${gatewayId}`);
+  },
+  queryGatewayList(data) {
+    return apiClient.post("/simgui/gateway/queryList", data);
+  },
 };

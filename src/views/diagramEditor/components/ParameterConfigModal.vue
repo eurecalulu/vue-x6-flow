@@ -69,23 +69,23 @@
       </el-table-column>
       <el-table-column prop="upperLimit" label="取值上限">
         <template #default="scope">
-          <el-input-number
+          <el-input
             v-model="scope.row.upperLimit"
             placeholder="无"
             style="width: 90%"
             size="mini"
-          ></el-input-number>
+          ></el-input>
         </template>
       </el-table-column>
 
       <el-table-column prop="lowerLimit" label="取值下限">
         <template #default="scope">
-          <el-input-number
+          <el-input
             v-model="scope.row.lowerLimit"
             placeholder="无"
             style="width: 90%"
             size="mini"
-          ></el-input-number>
+          ></el-input>
         </template>
       </el-table-column>
 
