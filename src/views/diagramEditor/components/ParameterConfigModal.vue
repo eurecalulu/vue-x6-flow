@@ -14,6 +14,15 @@
       border
       :header-cell-style="{ background: '#f5f7fa' }"
     >
+      <el-table-column prop="name" label="名称">
+        <template #default="scope">
+          <el-input
+            v-model="scope.row.name"
+            placeholder="名称"
+            size="mini"
+          ></el-input>
+        </template>
+      </el-table-column>
       <el-table-column prop="variableName" label="参数名称">
         <template #default="scope">
           <el-input
