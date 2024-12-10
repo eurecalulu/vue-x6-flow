@@ -31,8 +31,8 @@
           @select="handleMenuSelect"
           class="custom-menu"
         >
-          <el-menu-item index="modelManagement">模型管理</el-menu-item>
-          <el-menu-item index="projectManagement">项目管理</el-menu-item>
+          <el-menu-item index="/modelManagement">模型管理</el-menu-item>
+          <el-menu-item index="/projectManagement">项目管理</el-menu-item>
         </el-menu>
       </el-aside>
 
@@ -56,15 +56,17 @@ export default {
     ModelManagementIndex,
     ProjectManagementIndex,
   },
-  data() {
-    return {
-      // 默认显示模型管理页面
-      activeMenu: "modelManagement",
-    };
+  computed: {
+    // 动态绑定 activeMenu 为当前路由路径
+    activeMenu() {
+      return this.$route.path.split("/").pop(); // 获取路由路径的最后一部分
+    },
   },
   methods: {
-    handleMenuSelect(index) {
-      this.activeMenu = index;
+    handleMenuSelect(path) {
+      if (path !== this.$route.path) {
+        this.$router.push(path); // 仅当目标路径不同于当前路径时才导航
+      }
     },
   },
 };
@@ -76,10 +78,16 @@ export default {
   color: black; /* 设置默认字体颜色 */
 }
 
-/* 修改选中项的颜色 */
-.custom-menu .el-menu-item.is-active {
-  background-color: #555555; /* 设置选中项的背景色 */
-  color: white; /* 设置选中项的文字颜色 */
+/* 确保选中项始终保持自定义的背景色和文字颜色 */
+.custom-menu >>> .el-menu-item.is-active {
+  background-color: #555555 !important; /* 选中项背景色 */
+  color: white !important; /* 选中项文字颜色 */
+}
+
+/* 鼠标悬停时与选中项颜色一致 */
+.custom-menu >>> .el-menu-item:hover {
+  background-color: #555555 !important; /* 悬停背景色 */
+  color: white !important; /* 悬停文字颜色 */
 }
 
 .el-main {

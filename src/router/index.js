@@ -7,7 +7,27 @@ const routes = [
   {
     path: "/",
     name: "mainPage",
-    component: () => import(/* webpackChunkName: "about" */ "@/views/mainPage"),
+    component: () =>
+      import(/* webpackChunkName: "mainPage" */ "@/views/mainPage"),
+    redirect: "/modelManagement", // 默认跳转到模型管理
+    children: [
+      {
+        path: "modelManagement",
+        name: "modelManagement",
+        component: () =>
+          import(
+            /* webpackChunkName: "modelManagement" */ "@/views/modelManagement"
+          ),
+      },
+      {
+        path: "projectManagement",
+        name: "projectManagement",
+        component: () =>
+          import(
+            /* webpackChunkName: "projectManagement" */ "@/views/projectManagement"
+          ),
+      },
+    ],
   },
   {
     path: "/diagramEditor",
@@ -25,16 +45,16 @@ const routes = [
     name: "demo3",
     component: () => import("@/views/demo3"),
   },
-  {
-    path: "/projectManagement",
-    name: "projectManagement",
-    component: () => import("@/views/projectManagement"),
-  },
-  {
-    path: "/modelManagement",
-    name: "modelManagement",
-    component: () => import("@/views/modelManagement"),
-  },
+  // {
+  //   path: "/projectManagement",
+  //   name: "projectManagement",
+  //   component: () => import("@/views/projectManagement"),
+  // },
+  // {
+  //   path: "/modelManagement",
+  //   name: "modelManagement",
+  //   component: () => import("@/views/modelManagement"),
+  // },
   {
     path: "/diagramEditor/:diagramType/:diagramId/:modelId?/:projectId?",
     name: "DiagramEditor",
