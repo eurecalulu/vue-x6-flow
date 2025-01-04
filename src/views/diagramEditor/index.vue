@@ -48,6 +48,9 @@
         >
           <!-- 工具按钮，调整样式和对齐 -->
           <div style="display: flex; gap: 10px; align-items: center">
+            <el-tooltip content="返回到上一级" placement="bottom">
+              <i class="el-icon-back" @click="goBack" />
+            </el-tooltip>
             <el-tooltip content="项目" placement="bottom">
               <i class="el-icon-menu" />
             </el-tooltip>
@@ -69,9 +72,18 @@
             <el-tooltip content="保存" placement="bottom">
               <i class="el-icon-upload" @click="saveFn()" />
             </el-tooltip>
-            <!--            <el-tooltip content="加载保存页面" placement="bottom">-->
-            <!--              <i class="el-icon-link" @click="loadFn()" />-->
-            <!--            </el-tooltip>-->
+            <div class="unsaved-warning-container" v-if="isModified">
+              <el-tooltip
+                content="请单击左侧图标保存当前编辑内容"
+                placement="bottom"
+              >
+                <div class="unsaved-warning">
+                  <i class="el-icon-warning-outline warning-icon"></i>
+                  当前修改尚未保存
+                </div>
+              </el-tooltip>
+            </div>
+
             <el-tooltip content="是否禁用" placement="bottom">
               <i
                 :class="{ 'el-icon-lock': isLock, 'el-icon-unlock': !isLock }"
@@ -157,6 +169,7 @@ export default {
   },
   data() {
     return {
+      isModified: false, // 是否有未保存的修改
       graph: "",
       timer: "",
       isLock: false,
@@ -240,6 +253,23 @@ export default {
   //   }
   // },
   methods: {
+    goBack() {
+      if (this.isModified) {
+        this.$confirm("当前修改尚未保存，确定要返回吗？", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        })
+          .then(() => {
+            this.$router.go(-1);
+          })
+          .catch(() => {
+            // 取消返回，留在当前页面
+          });
+      } else {
+        this.$router.go(-1); // 如果没有修改直接返回
+      }
+    },
     // 根据 modelId 或 projectId 获取对应的名称并赋值给 displayName
     async fetchDisplayName() {
       try {
@@ -662,6 +692,11 @@ export default {
       });
       this.graph = graph;
 
+      // 监听节点移动，标记修改状态
+      graph.on("node:moved", ({ node }) => {
+        this.isModified = true; // 节点移动时标记修改状态
+      });
+
       graph.on("edge:contextmenu", ({ e, x, y, edge, view }) => {
         //  右键点击一条边触发
         console.log(x, y, view);
@@ -726,47 +761,12 @@ export default {
       });
 
       graph.on("edge:connected", ({ edge }) => {
-        // 当边被节点连接时触发
-        // 这里的目前都没太多用
-        // const source = graph.getCellById(edge.source.cell);
-        // const target = graph.getCellById(edge.target.cell);
-
-        // // 只允许输入
-        // if (target.data.type == "output") {
-        //   return graph.removeEdge(edge.id);
-        // }
-        //
-        // // 只允许输出
-        // if (source.data.type == "onlyIn") {
-        //   return graph.removeEdge(edge.id);
-        // }
-        //
-        // // 如果线源头的一端链接桩只允许输入
-        // if (/in/.test(edge.source.port)) {
-        //   return graph.removeEdge(edge.id);
-        // }
-        //
-        // // 目标一端链接桩只允许输出
-        // if (/out/.test(edge.target.port)) {
-        //   return graph.removeEdge(edge.id);
-        // }
-        //
-        // if (source.data.type == "condition") {
-        //   console.log(source);
-        //   console.log(target);
-        //   console.log(edge);
-        //   if (target.data.t === edge.id || target.data.f === edge.id) {
-        //     return graph.removeEdge(edge.id);
-        //   }
-        //   this.$refs.dialogCondition.visible = true;
-        //   this.$refs.dialogCondition.init(source.data, edge);
-        // }
-
         edge.attr({
           line: {
             strokeDasharray: "",
           },
         });
+        this.isModified = true;
       });
 
       graph.on("node:change:data", ({ node }) => {
@@ -784,6 +784,7 @@ export default {
             edge.attr("line/style/animation", "");
           }
         });
+        this.isModified = true;
       });
 
       graph.on("node:dblclick", ({ node }) => {
@@ -907,12 +908,15 @@ export default {
     async saveFn() {
       try {
         const graphData = this.graph.toJSON(); // 获取当前图表的 JSON 数据
+        const updateTime = new Date().toISOString(); // 获取当前时间戳（毫秒级）
+
         const diagramRequestBody = {
           id: this.diagramId, // 假设 diagramId 存储了当前图表的 ID
           properties: {
             graphData: graphData, // 将 graphData 放在 properties 中
             ...this.graphProperties,
           },
+          updateTime: updateTime, // 添加更新时间戳
         };
 
         // 2. 提取节点和边的数据
@@ -962,6 +966,7 @@ export default {
           api.saveOrUpdateLineList(this.diagramId, edges), // 批量保存边
         ]);
         this.$message.success("保存图表数据成功");
+        this.isModified = false;
       } catch (error) {
         console.error("保存图表数据失败：", error);
       }
@@ -984,6 +989,7 @@ export default {
           } else if (node.type == "node") {
             this.graph.removeNode(node.item.id);
           }
+          this.isModified = true;
           break;
         case "source":
           this.$refs.dialogMysql.visible = true;
@@ -999,6 +1005,7 @@ export default {
     },
 
     addNode({ shape, label, type, icon, x, y }) {
+      this.isModified = true;
       const { left, top, right, bottom } = document
         .getElementById("draw-cot")
         .getBoundingClientRect();
@@ -1294,8 +1301,6 @@ export default {
           if (nodeData.properties && nodeData.properties.fillColor) {
             node.attr("body/fill", nodeData.properties.fillColor);
           }
-
-          // 如果有其他需要更新的视觉属性，可以在这里继续添加
         } else {
           console.warn(`未找到 ID 为 ${nodeData.id} 的节点`);
         }
@@ -1322,7 +1327,7 @@ export default {
         // 获取图表中的节点
         const node = this.graph.getCell(nodeData.id);
         console.log("graph", this.graph.toJSON());
-        console.log("nodee", node);
+        console.log("node", node);
         if (node) {
           // 更新节点的数据
           node.setData(nodeData);
@@ -1336,8 +1341,6 @@ export default {
           if (nodeData.properties && nodeData.properties.fillColor) {
             node.attr("body/fill", nodeData.properties.fillColor);
           }
-
-          // 如果有其他需要更新的视觉属性，可以在这里继续添加
         } else {
           console.warn(`未找到 ID 为 ${nodeData.id} 的控制节点`);
         }
@@ -1373,8 +1376,6 @@ export default {
           if (edgeData.properties && edgeData.properties.fillColor) {
             edge.attr("body/fill", edgeData.properties.fillColor);
           }
-
-          // 如果有其他需要更新的视觉属性，可以在这里继续添加
         } else {
           console.warn(`未找到 ID 为 ${edgeData.id} 的连接线`);
         }
@@ -1482,5 +1483,30 @@ header i {
 .el-icon-lock:hover,
 .el-icon-unlock:hover {
   color: #333333; /* 悬停时的深灰色效果 */
+}
+
+.unsaved-warning {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d93026;
+  background-color: #fff5f5;
+  border: 1px solid #f2c4c4;
+  padding: 2px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 24px;
+  line-height: 20px; /* 让文本在方框内垂直居中 */
+}
+
+.unsaved-warning {
+  transition: all 0.3s ease-in-out;
+}
+
+.warning-icon {
+  font-size: 14px;
+  margin-right: 4px; /* 调整间距 */
+  line-height: 1;
 }
 </style>

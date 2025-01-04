@@ -210,6 +210,7 @@ export default {
       this.$emit("submit", this.localNodeData); // 通过 $emit 发送数据给父组件
       this.handleClose(); // 关闭抽屉
     },
+
     openParametersConfig() {
       this.isParametersConfigVisible = true;
     },

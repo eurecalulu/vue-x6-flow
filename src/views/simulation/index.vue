@@ -661,12 +661,14 @@ export default {
     async saveFn(manual) {
       try {
         const graphData = this.graph.toJSON(); // 获取当前图表的 JSON 数据
+        const updateTime = Date.now(); // 获取当前时间戳（毫秒级）
         const diagramRequestBody = {
           id: this.diagramId, // 假设 diagramId 存储了当前图表的 ID
           properties: {
             graphData: graphData, // 将 graphData 放在 properties 中
             ...this.graphProperties,
           },
+          updateTime: updateTime, // 添加更新时间戳
         };
 
         // 2. 提取节点和边的数据
