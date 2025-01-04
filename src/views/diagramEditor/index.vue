@@ -693,7 +693,7 @@ export default {
       this.graph = graph;
 
       // 监听节点移动，标记修改状态
-      graph.on("node:moved", ({ node }) => {
+      graph.on("node:moved", () => {
         this.isModified = true; // 节点移动时标记修改状态
       });
 
