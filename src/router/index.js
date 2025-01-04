@@ -43,16 +43,6 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "@/views/diagramEditor/index.vue"),
   },
-  {
-    path: "/dargeDemo",
-    name: "dargeDemo",
-    component: () => import("@/views/dargeDemo"),
-  },
-  {
-    path: "/demo3",
-    name: "demo3",
-    component: () => import("@/views/demo3"),
-  },
   // {
   //   path: "/projectManagement",
   //   name: "projectManagement",
@@ -78,7 +68,7 @@ const routes = [
 ];
 
 const router = new VueRouter({
-  mode: "history",
+  mode: "hash",
   base: process.env.BASE_URL,
   routes,
 });

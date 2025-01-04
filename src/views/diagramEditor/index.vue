@@ -229,16 +229,16 @@ export default {
     // 执行，加载初始数据并开始运行
     this.startFn();
     // 启动自动保存定时器，每3分钟执行一次
-    this.autoSaveInterval = setInterval(() => {
-      this.saveFn();
-    }, 180000); // 180000 毫秒 = 3 分钟
+    // this.autoSaveInterval = setInterval(() => {
+    //   this.saveFn();
+    // }, 180000); // 180000 毫秒 = 3 分钟
   },
-  beforeDestroy() {
-    // 在组件销毁前清除定时器
-    if (this.autoSaveInterval) {
-      clearInterval(this.autoSaveInterval);
-    }
-  },
+  // beforeDestroy() {
+  //   // 在组件销毁前清除定时器
+  //   if (this.autoSaveInterval) {
+  //     clearInterval(this.autoSaveInterval);
+  //   }
+  // },
   methods: {
     // 根据 modelId 或 projectId 获取对应的名称并赋值给 displayName
     async fetchDisplayName() {
