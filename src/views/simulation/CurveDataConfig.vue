@@ -111,6 +111,9 @@ export default {
         this.localVisible = newVal;
       },
     },
+    localVisible(val) {
+      this.$emit("update:visible", val);
+    },
     parameter: {
       immediate: true,
       handler(newVal) {
@@ -177,3 +180,9 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.el-dialog {
+  z-index: 3000 !important;
+}
+</style>

@@ -378,6 +378,8 @@ export default {
       this.localNodeData.signalsBindParam = newParameters; // 更新参数数据
     },
     openCurveDataConfig(index, type) {
+      console.log("openCurveDataConfig");
+
       let target = null;
 
       // 先找存储的曲线数据，没有再找输入项中的原始数据
@@ -409,9 +411,8 @@ export default {
         if (!Array.isArray(this.currentCurveParameter.value)) {
           this.$set(this.currentCurveParameter, "value", []);
         }
-
-        this.isCurveDataConfigVisible = true;
       }
+      this.isCurveDataConfigVisible = true;
     },
 
     updateCurveData(newCurveParameter) {

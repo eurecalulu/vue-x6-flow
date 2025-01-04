@@ -661,7 +661,7 @@ export default {
     async saveFn(manual) {
       try {
         const graphData = this.graph.toJSON(); // 获取当前图表的 JSON 数据
-        const updateTime = Date.now(); // 获取当前时间戳（毫秒级）
+        const updateTime = new Date().toISOString(); // 获取当前时间戳（毫秒级）
         const diagramRequestBody = {
           id: this.diagramId, // 假设 diagramId 存储了当前图表的 ID
           properties: {
